@@ -582,8 +582,8 @@ bool TemplateVoxelList<Voxel, VoxelIDType>::subtract(const TemplateVoxelList<Vox
                               overlap_stencil.begin(),
                               thrust::identity<bool>());
 
-  size_t new_lenght = thrust::distance(m_dev_id_list.begin(), thrust::get<0>(new_end.get_iterator_tuple()));
-  this->resize(new_lenght);
+  size_t new_length = thrust::distance(m_dev_id_list.begin(), thrust::get<0>(new_end.get_iterator_tuple()));
+  this->resize(new_length);
   unlockBoth(this, other, "TemplateVoxelList::subtract");
 
   return true;
