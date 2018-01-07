@@ -74,21 +74,38 @@ int main(int argc, char* argv[])
   gvl->addMap(gpu_voxels::MT_PROBAB_VOXELMAP, "myProbabVoxmap");              // 3D-Array of probabilistic Voxels (identified by their Voxelmap-like Pointer adress) that hold a Probability
   gvl->addMap(gpu_voxels::MT_PROBAB_OCTREE, "myProbabOctree");                // Octree of   probabilistic Voxels (identified by a Morton Code)                      that hold a Probability
 
-  const char* args[] = {"myBitmapVoxmap", "myBitmapVoxlist", "myBitmapOctree",
-                        "myProbabVoxmap", "myProbabOctree"};
-  std::vector<std::string> all_maps(args, args+5);
+  // const char* args[] = {"myBitmapVoxmap", "myBitmapVoxlist", "myBitmapOctree",
+  //                       "myProbabVoxmap", "myProbabOctree"};
+  // std::vector<std::string> all_maps(args, args+5);
+  // Octree seems to have some issues, leaving it out for now
+  const char* args[] = {"myBitmapVoxmap", "myBitmapVoxlist",
+                        "myProbabVoxmap"};
+  std::vector<std::string> all_maps(args, args+3);
 
 
 
   
 
   // Add collisiion elements to voxelmaps
-  std::cout << "\n\nAdding Collision\n";
+  std::cout << "\n\nPopulating Voxelmaps\n";
   for(std::vector<std::string>::size_type i=0; i<all_maps.size(); i++)
   {
-      gpu_voxels::GpuVoxelsMapSharedPtr map = gvl->getMap(all_maps[i]);
+      gpu_voxels::Vector3f center_box1_min(0.1,0.1,0.1);
+      gpu_voxels::Vector3f center_box1_max(0.5,0.5,0.5);
+      gpu_voxels::Vector3f center_box2_min(1.0,1.0,1.0);
+      gpu_voxels::Vector3f center_box2_max(1.5,1.5,1.5);
 
-      std::cout << all_maps[i] << ": " << map->getMemoryUsage() << "\n";
+      try{
+          gvl->insertBoxIntoMap(center_box1_min,center_box1_max,all_maps[i],
+                                gpu_voxels::eBVM_OCCUPIED);
+          gvl->insertBoxIntoMap(center_box2_min,center_box2_max,all_maps[i],
+                                gpu_voxels::eBVM_OCCUPIED);
+      }
+      catch (std::exception& e)
+      {
+          std::cerr << "Exception when adding to " << all_maps[i] << ": " << e.what() << "\n";
+      }
+
   }
   std::cout << "\n";
 
@@ -96,7 +113,7 @@ int main(int argc, char* argv[])
 
 
   // Printing memory usage
-  std::cout << "\n\nMemory Usage\n";
+  std::cout << "\n\nMemory Usage:\n";
   for(std::vector<std::string>::size_type i=0; i<all_maps.size(); i++)
   {
       gpu_voxels::GpuVoxelsMapSharedPtr map = gvl->getMap(all_maps[i]);
@@ -104,27 +121,21 @@ int main(int argc, char* argv[])
       std::cout << all_maps[i] << ": " << map->getMemoryUsage() << "\n";
   }
 
-  gpu_voxels::Vector3f center_box1_min(0.0,0.0,0.0);
-  gpu_voxels::Vector3f center_box1_max(0.5,0.5,0.5);
-  gvl->insertBoxIntoMap(center_box1_min,center_box1_max,"myBitmapVoxmap",gpu_voxels::eBVM_OCCUPIED);
-  gvl->insertBoxIntoMap(center_box1_min,center_box1_max,"myProbabVoxmap",gpu_voxels::eBVM_OCCUPIED);
-
-  
-  gpu_voxels::Vector3f center_box2_min(1.0,1.0,1.0);
-  gpu_voxels::Vector3f center_box2_max(1.5,1.5,1.5);
-  gvl->insertBoxIntoMap(center_box2_min,center_box2_max,"myBitmapVoxmap",gpu_voxels::eBVM_OCCUPIED);
-  
-
-
   // gvl->getMap("myProbabVoxmap")->as<voxelmap::ProbVoxelMap>()->printVoxelMapData();
   // gvl->getMap("myBitmapVoxmap")->as<voxelmap::BitVectorVoxelMap>()->printVoxelMapData();
-  
+
+  std::cout << "\n\nThe probabilistic voxelmap\n\n";
   voxelmap::ProbVoxelMap* pmap = gvl->getMap("myProbabVoxmap")->as<voxelmap::ProbVoxelMap>();
 
+  // Transfer from device (GPU) to host. This is (relatively) slow
+  thrust::host_vector<ProbabilisticVoxel> h_v(8);
+  thrust::device_ptr<ProbabilisticVoxel> d_ptr(pmap->getDeviceDataPtr());
+  thrust::copy(d_ptr, d_ptr+8, h_v.begin());
   
-  for(uint32_t i=0; i<pmap->getVoxelMapSize(); i++)
+  for(uint32_t i=0; i < h_v.size(); i++)
   {
-      // std::cout << pmap->getConstDeviceDataPtr()[i] << "\n";
+      //Note: actual proability type is int_8, but std::cout treats this as a char
+      std::cout << "Voxel " << i << ": " << (int)h_v[i].getOccupancy() << "\n";
   }
 
 
@@ -132,7 +143,8 @@ int main(int argc, char* argv[])
   while(true)
   {
     // Tell the visualier that maps have changed.
-    gvl->visualizeMap("myBitmapVoxmap");
+    // gvl->visualizeMap("myBitmapVoxmap");
+    gvl->visualizeMap("myProbabVoxmap");
 
     usleep(100000);
 
