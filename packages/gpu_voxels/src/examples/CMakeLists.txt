@@ -70,6 +70,35 @@ ICMAKER_EXTERNAL_DEPENDENCIES(
 
 ICMAKER_BUILD_PROGRAM()
 #------------- Example Program for the usage of gpu_voxels ------------
+ICMAKER_SET("tiny_maps" IDE_FOLDER ${EXAMPLES_IDE_FOLDER})
+
+ICMAKER_ADD_HEADERS(
+  )
+
+ICMAKER_ADD_SOURCES(
+  TinyMaps.cpp
+  )
+
+ICMAKER_ADD_CUDA_FILES(
+  )
+
+ICMAKER_LOCAL_CPPDEFINES(-DGPU_VOXELS_EXPORT_SYMBOLS -Wno-unknown-pragmas)
+ICMAKER_GLOBAL_CPPDEFINES(-D_IC_BUILDER_GPU_VOXELS_EXAMPLES_TINYMAPS_)
+ICMAKER_INCLUDE_DIRECTORIES(${GPU_VOXELS_INCLUDE_DIRS})
+
+ICMAKER_INTERNAL_DEPENDENCIES(
+  icl_core
+  icl_core_config
+  icl_core_logging
+  gpu_voxels
+  )
+
+ICMAKER_EXTERNAL_DEPENDENCIES(
+  CUDA
+  )
+
+ICMAKER_BUILD_PROGRAM()
+#------------- Example Program for the usage of gpu_voxels ------------
 ICMAKER_SET("shift_vs_transform" IDE_FOLDER ${EXAMPLES_IDE_FOLDER})
 
 ICMAKER_ADD_HEADERS(
