@@ -36,7 +36,7 @@ FIND_PACKAGE(PCL)
 # Dependencies for ROS interconnect
 FIND_PACKAGE(ROS)
 
-FIND_PACKAGE(pcl_ros)
+# FIND_PACKAGE(pcl_ros)
 
 # Dependencies for Kinect support
 FIND_PACKAGE(OpenNi)

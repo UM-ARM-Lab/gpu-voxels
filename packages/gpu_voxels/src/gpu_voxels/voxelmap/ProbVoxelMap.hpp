@@ -41,12 +41,17 @@ ProbVoxelMap::ProbVoxelMap(const Vector3ui dim, const float voxel_side_length, c
 ProbVoxelMap::ProbVoxelMap(Voxel* dev_data, const Vector3ui dim, const float voxel_side_length, const MapType map_type) :
     Base(dev_data, dim, voxel_side_length, map_type)
 {
-
+    
 }
 
 ProbVoxelMap::~ProbVoxelMap()
 {
 
+}
+
+void ProbVoxelMap::subtract(const ProbVoxelMap *other)
+{
+    kernelSubtractMaps<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size, other->m_dev_data);
 }
 
 template<std::size_t length>
@@ -109,33 +114,33 @@ bool ProbVoxelMap::insertRobotConfiguration(const MetaPointCloud *robot_links, b
 
 void ProbVoxelMap::clearBitVoxelMeaning(BitVoxelMeaning voxel_meaning)
 {
-  if(voxel_meaning != eBVM_OCCUPIED)
-     LOGGING_ERROR_C(VoxelmapLog, ProbVoxelMap, GPU_VOXELS_MAP_ONLY_SUPPORTS_BVM_OCCUPIED << endl);
-  else
+  // if(voxel_meaning != eBVM_OCCUPIED)
+  //    LOGGING_ERROR_C(VoxelmapLog, ProbVoxelMap, GPU_VOXELS_MAP_ONLY_SUPPORTS_BVM_OCCUPIED << endl);
+  // else
     this->clearMap();
 }
 
 void ProbVoxelMap::insertPointCloud(const std::vector<Vector3f> &points, const BitVoxelMeaning voxel_meaning)
 {
-  if(voxel_meaning != eBVM_OCCUPIED)
-    LOGGING_ERROR_C(VoxelmapLog, ProbVoxelMap, GPU_VOXELS_MAP_ONLY_SUPPORTS_BVM_OCCUPIED << endl);
-  else
+  // if(voxel_meaning != eBVM_OCCUPIED)
+  //   LOGGING_ERROR_C(VoxelmapLog, ProbVoxelMap, GPU_VOXELS_MAP_ONLY_SUPPORTS_BVM_OCCUPIED << endl);
+  // else
     this->Base::insertPointCloud(points, voxel_meaning);
 }
 
 void ProbVoxelMap::insertPointCloud(const PointCloud &pointcloud, const BitVoxelMeaning voxel_meaning)
 {
-  if(voxel_meaning != eBVM_OCCUPIED)
-    LOGGING_ERROR_C(VoxelmapLog, ProbVoxelMap, GPU_VOXELS_MAP_ONLY_SUPPORTS_BVM_OCCUPIED << endl);
-  else
+  // if(voxel_meaning != eBVM_OCCUPIED)
+  //   LOGGING_ERROR_C(VoxelmapLog, ProbVoxelMap, GPU_VOXELS_MAP_ONLY_SUPPORTS_BVM_OCCUPIED << endl);
+  // else
     this->Base::insertPointCloud(pointcloud, voxel_meaning);
 }
 
 void ProbVoxelMap::insertPointCloud(const Vector3f *points_d, uint32_t size, const BitVoxelMeaning voxel_meaning)
 {
-  if(voxel_meaning != eBVM_OCCUPIED)
-    LOGGING_ERROR_C(VoxelmapLog, ProbVoxelMap, GPU_VOXELS_MAP_ONLY_SUPPORTS_BVM_OCCUPIED << endl);
-  else
+  // if(voxel_meaning != eBVM_OCCUPIED)
+  //   LOGGING_ERROR_C(VoxelmapLog, ProbVoxelMap, GPU_VOXELS_MAP_ONLY_SUPPORTS_BVM_OCCUPIED << endl);
+  // else
     this->Base::insertPointCloud(points_d, size, voxel_meaning);
 }
 
