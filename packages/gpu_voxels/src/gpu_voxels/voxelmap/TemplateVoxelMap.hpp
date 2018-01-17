@@ -614,7 +614,7 @@ void TemplateVoxelMap<Voxel>::insertMetaPointCloud(const MetaPointCloud &meta_po
                                                    BitVoxelMeaning voxel_meaning)
 {
   this->lockSelf("TemplateVoxelMap::insertMetaPointCloud"); 
-  LOGGING_INFO_C(VoxelmapLog, VoxelMap, "Inserting meta_point_cloud" << endl);
+  // LOGGING_INFO_C(VoxelmapLog, VoxelMap, "Inserting meta_point_cloud" << endl);
   // reset warning indicator:
   HANDLE_CUDA_ERROR(cudaMemset((void*)m_dev_points_outside_map, 0, sizeof(bool)));
   bool points_outside_map;
@@ -640,7 +640,7 @@ void TemplateVoxelMap<Voxel>::insertMetaPointCloud(const MetaPointCloud& meta_po
   this->lockSelf("TemplateVoxelMap::insertMetaPointCloud");
   assert(meta_point_cloud.getNumberOfPointclouds() == voxel_meanings.size());
 
-  LOGGING_INFO_C(VoxelmapLog, VoxelMap, "Inserting meta_point_cloud" << endl);
+  // LOGGING_INFO_C(VoxelmapLog, VoxelMap, "Inserting meta_point_cloud" << endl);
   
   // reset warning indicator:
   HANDLE_CUDA_ERROR(cudaMemset((void*)m_dev_points_outside_map, 0, sizeof(bool)));

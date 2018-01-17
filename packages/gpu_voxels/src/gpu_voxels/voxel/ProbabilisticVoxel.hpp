@@ -78,7 +78,10 @@ __host__ __device__
 void ProbabilisticVoxel::insert(const uint32_t voxel_meaning)
 {
   // m_occupancy = MAX_PROBABILITY;
-    m_occupancy = (Probability)voxel_meaning + UNKNOWN_PROBABILITY;
+    // m_occupancy = Probability(127);
+    m_occupancy = Probability(MAX(MIN(int32_t(voxel_meaning) + int32_t(UNKNOWN_PROBABILITY),
+                                       int32_t(MAX_PROBABILITY)),
+                                  int32_t(MIN_PROBABILITY)));
 }
 
 __host__ __device__
