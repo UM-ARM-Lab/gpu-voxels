@@ -92,6 +92,8 @@ public:
    * This map will get extended if joints were missing.
    */
   virtual void getUpperJointLimits(JointValueMap &upper_limits) = 0;
+
+    virtual void syncToHost() = 0;
 };
 
 } // namespace robot

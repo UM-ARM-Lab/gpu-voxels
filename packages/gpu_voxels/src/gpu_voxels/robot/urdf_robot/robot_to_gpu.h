@@ -64,6 +64,8 @@ public:
    */
   const MetaPointCloud *getTransformedClouds();
 
+    void syncToHost();
+
 private:
   MetaPointCloud* m_link_pointclouds_transformed;
   Matrix4f m_transformation;
