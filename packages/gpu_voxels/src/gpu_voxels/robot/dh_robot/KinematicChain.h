@@ -136,7 +136,7 @@ public:
    */
   virtual void updatePointcloud(const std::string &link_name, const std::vector<Vector3f> &cloud);
 
-
+    virtual void syncToHost() {m_transformed_links_meta_cloud->syncToHost();};
 
   //! for testing purposes
   //__host__

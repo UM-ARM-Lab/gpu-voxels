@@ -91,5 +91,10 @@ const MetaPointCloud* RobotToGPU::getTransformedClouds()
   return m_link_pointclouds_transformed;
 }
 
+void RobotToGPU::syncToHost()
+{
+    m_link_pointclouds_transformed->syncToHost();
+}
+
 } // namespace robot
 } // namespace gpu_voxels
