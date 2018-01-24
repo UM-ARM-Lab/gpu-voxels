@@ -31,7 +31,7 @@ FIND_PACKAGE(kdl_parser)
 FIND_PACKAGE(Octomap)
 
 # Dependencies for PCL interfaces
-FIND_PACKAGE(PCL)
+# FIND_PACKAGE(PCL)
 
 # Dependencies for ROS interconnect
 FIND_PACKAGE(ROS)
