@@ -49,6 +49,11 @@ ProbVoxelMap::~ProbVoxelMap()
 
 }
 
+void ProbVoxelMap::subtract(const ProbVoxelMap *other)
+{
+    kernelSubtractMaps<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size, other->m_dev_data);
+}    
+
 template<std::size_t length>
 void ProbVoxelMap::insertSensorData(const Vector3f* points, const bool enable_raycasting,
                                     const bool cut_real_robot, const BitVoxelMeaning voxel_meaning,

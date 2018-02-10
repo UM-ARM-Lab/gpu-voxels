@@ -44,6 +44,8 @@ public:
   ProbVoxelMap(Voxel* dev_data, const Vector3ui dim, const float voxel_side_length, const MapType map_type);
   virtual ~ProbVoxelMap();
 
+  void subtract(const ProbVoxelMap *other);
+
   template<std::size_t length>
   void insertSensorData(const Vector3f* points, const bool enable_raycasting, const bool cut_real_robot,
                         const BitVoxelMeaning voxel_meaning, BitVoxel<length>* robot_map = NULL);

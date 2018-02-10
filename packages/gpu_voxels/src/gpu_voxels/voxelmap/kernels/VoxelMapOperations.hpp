@@ -547,6 +547,19 @@ void kernelInsertMetaPointCloud(DistanceVoxel* voxelmap, const MetaPointCloudStr
 //  }
 //}
 
+__global__
+void kernelSubtractMaps(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
+    ProbabilisticVoxel* othermap)
+{
+  for (uint32_t i = blockIdx.x * blockDim.x + threadIdx.x; i < voxelmap_size; i += gridDim.x * blockDim.x)
+  {
+    if(othermap[i].getOccupancy() != UNKNOWN_PROBABILITY)
+    {
+        voxelmap[i].updateOccupancy(-1 * (othermap[i].getOccupancy()));
+    }
+  }
+}
+
 /* Insert sensor data into voxel map.
  * Assumes sensor data is already transformed
  * into world coordinate system.
