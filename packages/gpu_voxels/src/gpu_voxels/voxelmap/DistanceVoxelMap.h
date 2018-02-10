@@ -63,6 +63,8 @@ public:
 
   virtual bool mergeOccupied(const boost::shared_ptr<ProbVoxelMap> other, const Vector3ui &voxel_offset = Vector3ui());
 
+  DistanceVoxel::pba_dist_t getClosestObstacleDistance(const boost::shared_ptr<ProbVoxelMap> other);
+
   void jumpFlood3D(int block_size = cMAX_THREADS_PER_BLOCK, int debug = 0, bool logging_reinit = false);
   void exactDistances3D(std::vector<Vector3f>& points);
   void parallelBanding3D(uint32_t m1 = 1, uint32_t m2 = 1, uint32_t m3 = 1, uint32_t m1_blocksize = gpu_voxels::PBA_DEFAULT_M1_BLOCK_SIZE, uint32_t m2_blocksize = gpu_voxels::PBA_DEFAULT_M2_BLOCK_SIZE, uint32_t m3_blocksize = gpu_voxels::PBA_DEFAULT_M3_BLOCK_SIZE, bool detailtimer = false);
@@ -121,6 +123,37 @@ struct probVoxelOccupied
   }
 };
 
+struct compareProbDist
+{
+  typedef thrust::tuple<ProbabilisticVoxel, DistanceVoxel, uint32_t> ProbDist;
+  Vector3ui dims;
+  compareProbDist(const Vector3ui &map_dims)
+    {
+      dims = map_dims;
+    }
+    
+
+  /*
+   *Returns true if lhs < rhs
+   * i.e lhs is occupied
+   * if rhs is occupied, the distance value is lower
+   *
+   */
+  __host__ __device__
+  bool operator()(ProbDist lhs, ProbDist rhs)
+    {
+      Vector3i lhs_pos = linearIndexToCoordinates(thrust::get<2>(lhs), dims);
+      Vector3i rhs_pos = linearIndexToCoordinates(thrust::get<2>(rhs), dims);
+            
+                
+      return (thrust::get<0>(lhs).getOccupancy() == MAX_PROBABILITY) &&
+        ((thrust::get<0>(rhs).getOccupancy() != MAX_PROBABILITY) ||
+         (thrust::get<1>(lhs).squaredObstacleDistance(lhs_pos) <
+          thrust::get<1>(rhs).squaredObstacleDistance(rhs_pos)));
+    }
+
+};    
 } // end of namespace voxelmap
 } // end of namespace gpu_voxels
+
 #endif // DISTANCEVOXELMAP_H

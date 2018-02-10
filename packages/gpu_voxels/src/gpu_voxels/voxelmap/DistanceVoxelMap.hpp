@@ -40,6 +40,7 @@
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/zip_iterator.h>
 #include <thrust/tuple.h>
+#include <thrust/extrema.h>
 
 #include <gpu_voxels/logging/logging_gpu_voxels.h>
 
@@ -130,6 +131,42 @@ bool DistanceVoxelMap::mergeOccupied(const boost::shared_ptr<ProbVoxelMap> other
   return true;
 }
 
+DistanceVoxel::pba_dist_t DistanceVoxelMap::getClosestObstacleDistance(const boost::shared_ptr<ProbVoxelMap> other)
+{
+
+  thrust::counting_iterator<uint32_t> count(0);
+  uint32_t s = this->getVoxelMapSize();
+
+
+  thrust::device_ptr<ProbabilisticVoxel> d_other_ptr =
+    thrust::device_pointer_cast(other->getDeviceDataPtr());
+  thrust::device_ptr<DistanceVoxel> d_this_ptr =
+    thrust::device_pointer_cast(this->getDeviceDataPtr());
+
+
+  typedef thrust::tuple<thrust::device_ptr<ProbabilisticVoxel>,
+                        thrust::device_ptr<DistanceVoxel>,
+                        thrust::counting_iterator<uint32_t> >  elementTuple;
+  
+  thrust::zip_iterator<elementTuple> closest =
+    thrust::min_element(
+      thrust::device_system_tag(),
+      thrust::make_zip_iterator(
+        thrust::make_tuple(d_other_ptr, d_this_ptr, count)),
+      thrust::make_zip_iterator(
+        thrust::make_tuple(d_other_ptr+s, d_this_ptr+s, count+s)),
+      compareProbDist(this->getDimensions())
+      );
+  
+
+  Vector3i pos = linearIndexToCoordinates(thrust::get<2>(*closest), this->getDimensions());
+  DistanceVoxel closest_dist_vox = thrust::get<1>(*closest);
+  
+  // return sqrt((thrust::get<1>(*closest).squaredObstacleDistance(pos));
+  return sqrt(closest_dist_vox.squaredObstacleDistance(pos));
+}    
+
+    
 /**
  * cjuelg: jump flood distances, obstacle vectors
  */
