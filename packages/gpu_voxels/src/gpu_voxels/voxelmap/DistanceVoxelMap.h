@@ -156,8 +156,8 @@ struct compareProbDist
   __host__ __device__
   bool operator()(ProbDist lhs, ProbDist rhs)
     {
-      Vector3i lhs_pos = linearIndexToCoordinates(thrust::get<2>(lhs), dims);
-      Vector3i rhs_pos = linearIndexToCoordinates(thrust::get<2>(rhs), dims);
+      Vector3i lhs_pos = mapToVoxelsSigned(thrust::get<2>(lhs), dims);
+      Vector3i rhs_pos = mapToVoxelsSigned(thrust::get<2>(rhs), dims);
             
                 
       return (thrust::get<0>(lhs).getOccupancy() == MAX_PROBABILITY) &&

@@ -164,7 +164,7 @@ DistanceVoxel::pba_dist_t DistanceVoxelMap::getClosestObstacleDistance(const boo
       );
   
 
-  Vector3i pos = linearIndexToCoordinates(thrust::get<2>(*closest), this->getDimensions());
+  Vector3i pos = mapToVoxelsSigned(thrust::get<2>(*closest), this->getDimensions());
   DistanceVoxel closest_dist_vox = thrust::get<1>(*closest);
   
   // return sqrt((thrust::get<1>(*closest).squaredObstacleDistance(pos));
