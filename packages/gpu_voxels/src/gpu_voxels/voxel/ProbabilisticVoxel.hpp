@@ -56,6 +56,30 @@ Probability ProbabilisticVoxel::updateOccupancy(const Probability occupancy)
 }
 
 __host__ __device__
+Probability ProbabilisticVoxel::add(const Probability occupancy)
+{
+  if(m_occupancy == UNKNOWN_PROBABILITY)
+  {
+    m_occupancy = 0;
+  }
+
+  m_occupancy = MIN(int32_t(m_occupancy) + int32_t(occupancy) - int32_t(MIN_PROBABILITY), int32_t(MAX_PROBABILITY));
+  return m_occupancy;
+}
+
+__host__ __device__
+Probability ProbabilisticVoxel::subtract(const Probability occupancy)
+{
+  if(m_occupancy == UNKNOWN_PROBABILITY)
+  {
+    m_occupancy = 0;
+  }
+
+  m_occupancy = MAX(int32_t(m_occupancy) - int32_t(occupancy) + int32_t(MIN_PROBABILITY), int32_t(MIN_PROBABILITY));
+  return m_occupancy;
+}
+
+__host__ __device__
 Probability& ProbabilisticVoxel::occupancy()
 {
   return m_occupancy;
@@ -78,11 +102,11 @@ void ProbabilisticVoxel::insert(const BitVoxelMeaning voxel_meaning)
 {
   switch(voxel_meaning) {
     case eBVM_FREE : 
-      updateOccupancy(cSENSOR_MODEL_FREE);
+      m_occupancy = MIN_PROBABILITY;
       break;
     case eBVM_COLLISION :
     case eBVM_OCCUPIED : 
-	updateOccupancy(cSENSOR_MODEL_OCCUPIED);
+      m_occupancy = MAX_PROBABILITY;
       break;
     case eBVM_UNKNOWN :
     case eBVM_UNDEFINED :

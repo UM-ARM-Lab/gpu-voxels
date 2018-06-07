@@ -69,6 +69,20 @@ inline static float probabilityToFloat(const Probability val)
   Probability updateOccupancy(const Probability occupancy);
 
   /**
+   *  @brief add Adds occupancies as if they were 0-1 probabilities
+   *
+   */
+  __host__ __device__
+  Probability add(const Probability occupancy);
+
+  /**
+   *  @brief subtract Subtracts occupancies as if they were 0-1 probabilities
+   *
+   */
+  __host__ __device__
+  Probability subtract(const Probability occupancy);
+
+  /**
    * @brief occupancy Write reference.
    * @return
    */

@@ -621,7 +621,20 @@ void kernelSubtractMaps(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_si
   {
     if(othermap[i].getOccupancy() != UNKNOWN_PROBABILITY)
     {
-        voxelmap[i].updateOccupancy(-1 * (othermap[i].getOccupancy()));
+        voxelmap[i].subtract(othermap[i].getOccupancy());
+    }
+  }
+}
+
+__global__
+void kernelAddMaps(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
+    ProbabilisticVoxel* othermap)
+{
+  for (uint32_t i = blockIdx.x * blockDim.x + threadIdx.x; i < voxelmap_size; i += gridDim.x * blockDim.x)
+  {
+    if(othermap[i].getOccupancy() != UNKNOWN_PROBABILITY)
+    {
+        voxelmap[i].add(othermap[i].getOccupancy());
     }
   }
 }
