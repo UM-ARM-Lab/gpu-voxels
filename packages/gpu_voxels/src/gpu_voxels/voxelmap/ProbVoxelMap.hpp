@@ -57,7 +57,12 @@ void ProbVoxelMap::subtract(const ProbVoxelMap *other)
 void ProbVoxelMap::add(const ProbVoxelMap *other)
 {
     kernelAddMaps<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size, other->m_dev_data);
-}    
+}
+
+void ProbVoxelMap::copy(const ProbVoxelMap *other)
+{
+    kernelCopyMaps<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size, other->m_dev_data);
+}
 
 template<std::size_t length>
 void ProbVoxelMap::insertSensorData(const PointCloud &global_points, const Vector3f &sensor_pose, const bool enable_raycasting,

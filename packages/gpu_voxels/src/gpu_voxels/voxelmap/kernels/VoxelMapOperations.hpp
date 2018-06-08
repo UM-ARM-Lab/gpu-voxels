@@ -639,6 +639,16 @@ void kernelAddMaps(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
   }
 }
 
+__global__
+void kernelCopyMaps(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
+    ProbabilisticVoxel* othermap)
+{
+  for (uint32_t i = blockIdx.x * blockDim.x + threadIdx.x; i < voxelmap_size; i += gridDim.x * blockDim.x)
+  {
+    voxelmap[i].occupancy() = othermap[i].getOccupancy();
+  }
+}
+
 /* Insert sensor data into voxel map.
  * Assumes sensor data is already transformed
  * into world coordinate system.
