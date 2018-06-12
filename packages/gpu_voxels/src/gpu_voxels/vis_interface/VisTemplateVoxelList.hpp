@@ -75,7 +75,7 @@ bool VisTemplateVoxelList<Voxel, VoxelIDType>::visualize(const bool force_repain
                         std::string(shm_variable_name_voxellist_num_voxels + id.str()).c_str())(uint32_t(0));
     m_shm_bufferSwapped = m_segment.find_or_construct<bool>(
         std::string(shm_variable_name_voxellist_buffer_swapped + id.str()).c_str())(false);
-    std::cout << "Name of shared buffer swapped: " << std::string(shm_variable_name_voxellist_buffer_swapped + id.str()).c_str() << "." << std::endl;
+    // std::cout << "Name of shared buffer swapped: " << std::string(shm_variable_name_voxellist_buffer_swapped + id.str()).c_str() << "." << std::endl;
     m_shm_mapName = m_segment.find_or_construct_it<char>(
                       std::string(shm_variable_name_voxellist_name + id.str()).c_str())[m_map_name.size()](
                       m_map_name.data());
