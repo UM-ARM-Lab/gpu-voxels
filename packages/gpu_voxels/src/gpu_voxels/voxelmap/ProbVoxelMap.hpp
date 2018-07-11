@@ -123,6 +123,22 @@ size_t ProbVoxelMap::collideWith(const ProbVoxelMap *map, float coll_threshold, 
   return collisionCheckWithCounterRelativeTransform((TemplateVoxelMap*)map, collider, offset); //does the locking
 }
 
+bool ProbVoxelMap::overlapsWith(const voxelmap::ProbVoxelMap* other, float coll_threshold)
+{
+  DefaultCollider collider(coll_threshold);
+  bool *dev_overlap_result;
+  bool host_overlap_result = false;
+  cudaMalloc(&dev_overlap_result, sizeof(bool));
+  cudaMemcpy(dev_overlap_result, &host_overlap_result, sizeof(bool), cudaMemcpyHostToDevice);
+  
+  kernelOverlaps<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size, other->m_dev_data,
+                                          collider, dev_overlap_result);
+  
+  cudaMemcpy(&host_overlap_result, dev_overlap_result, sizeof(bool), cudaMemcpyDeviceToHost);
+  cudaFree(dev_overlap_result);
+  return host_overlap_result;
+}
+
 } // end of namespace
 } // end of namespace
 

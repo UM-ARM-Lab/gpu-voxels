@@ -71,6 +71,30 @@ void kernelClearVoxelMap(BitVoxel<bit_length>* voxelmap, uint32_t voxelmap_size,
   }
 }
 
+
+/*
+ *  Determines if there is any overlap between two maps
+ *
+ */
+template<class Collider>
+__global__
+void kernelOverlaps(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
+                    ProbabilisticVoxel* othermap, Collider collider, bool* result)
+{
+  for (uint32_t i = blockIdx.x * blockDim.x + threadIdx.x; i < voxelmap_size; i += gridDim.x * blockDim.x)
+  {
+    if(*result){
+      return;
+    }
+    if(collider.collide(voxelmap[i], othermap[i]))
+    {
+        *result = true;
+    }
+  }
+}
+
+
+
 /*! Collide two voxel maps.
  * Voxels are considered occupied for values
  * greater or equal given thresholds.
