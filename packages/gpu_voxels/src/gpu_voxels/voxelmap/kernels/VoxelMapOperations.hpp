@@ -94,6 +94,63 @@ void kernelOverlaps(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
 }
 
 
+/***
+ *  Counts the number of occupied voxels in a voxelmap (inefficiently)
+ */
+__global__
+void kernelCountOccupied(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
+                         unsigned long long int* counter)
+{
+    *counter = 0;
+    __syncthreads();
+    uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned long long threadtotal = 0;
+
+    while(i < voxelmap_size)
+    {
+        if(voxelmap[i].isOccupied(1.0))
+        {
+            threadtotal += 1;
+        }
+        i += blockDim.x * gridDim.x;
+    }
+    if(threadtotal > 0)
+    {
+        atomicAdd(counter, threadtotal);
+    }
+}
+
+/*
+ *   Copies the ith index encountered (order not guaranteed due to parallelism) 
+ *   occupied voxel from voxelmap to othermap
+ *
+ */
+__global__
+void kernelCopyIthOccupied(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
+                           ProbabilisticVoxel* othermap, unsigned long long* counter,
+                           unsigned long copy_index)
+{
+    // *counter = 0;
+    // __syncthreads();
+
+    uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
+    i = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned long long int ind = 0;
+   
+    while(i < voxelmap_size && *counter <= copy_index)
+    {
+        if(voxelmap[i].isOccupied(1.0))
+        {
+            ind = atomicAdd(counter, 1);
+            if(ind == copy_index)
+            {
+                othermap[i] = voxelmap[i];
+            }
+        }
+        i += blockDim.x * gridDim.x;
+    }
+}
+
 
 /*! Collide two voxel maps.
  * Voxels are considered occupied for values

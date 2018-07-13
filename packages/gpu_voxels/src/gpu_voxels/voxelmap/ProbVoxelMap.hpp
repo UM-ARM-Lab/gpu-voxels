@@ -139,6 +139,34 @@ bool ProbVoxelMap::overlapsWith(const voxelmap::ProbVoxelMap* other, float coll_
   return host_overlap_result;
 }
 
+
+
+void ProbVoxelMap::copyIthOccupied(const voxelmap::ProbVoxelMap* other, unsigned long copy_index)
+{
+    unsigned long long int* d_counter;
+    unsigned long long int h_counter = 0;
+    cudaMalloc(&d_counter, sizeof(unsigned long long int));
+    cudaMemcpy(d_counter, &h_counter, sizeof(unsigned long long int), cudaMemcpyHostToDevice);
+
+    // kernelCountOccupied<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size, d_counter);
+    // cudaMemcpy(&h_counter, d_counter, sizeof(unsigned long long int), cudaMemcpyDeviceToHost);
+
+    // std::default_random_engine generator;
+    // std::uniform_int_distribution<unsigned long> dist(0, m_voxelmap_size);
+    // unsigned long rand_index = distribution(generator);
+
+    kernelCopyIthOccupied<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size, other->m_dev_data, d_counter, copy_index);
+
+    cudaMemcpy(&h_counter, d_counter, sizeof(unsigned long long int), cudaMemcpyDeviceToHost);
+    
+    // std::cout << "num blocks: " << m_blocks << "\n";
+    // std::cout << "num threads: " << m_threads << "\n";
+    // std::cout << "counter: " << h_counter << "\n";
+    
+    
+    cudaFree(d_counter);
+}
+
 } // end of namespace
 } // end of namespace
 
