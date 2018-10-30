@@ -64,6 +64,12 @@ void ProbVoxelMap::copy(const ProbVoxelMap *other)
     kernelCopyMaps<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size, other->m_dev_data);
 }
 
+void ProbVoxelMap::dialate(const ProbVoxelMap *other, int dist)
+{
+    kernelDialateMap<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size, getDimensions(),
+                                              other->m_dev_data, dist);
+}
+
 template<std::size_t length>
 void ProbVoxelMap::insertSensorData(const PointCloud &global_points, const Vector3f &sensor_pose, const bool enable_raycasting,
                                     const bool cut_real_robot, const BitVoxelMeaning robot_voxel_meaning,
@@ -157,7 +163,7 @@ void ProbVoxelMap::copyIthOccupied(const voxelmap::ProbVoxelMap* other, unsigned
 
     kernelCopyIthOccupied<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size, other->m_dev_data, d_counter, copy_index);
 
-    cudaMemcpy(&h_counter, d_counter, sizeof(unsigned long long int), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(&h_counter, d_counter, sizeof(unsigned long long int), cudaMemcpyDeviceToHost);
     
     // std::cout << "num blocks: " << m_blocks << "\n";
     // std::cout << "num threads: " << m_threads << "\n";

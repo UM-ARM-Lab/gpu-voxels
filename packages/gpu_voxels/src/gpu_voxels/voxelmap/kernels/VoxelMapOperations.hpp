@@ -730,6 +730,50 @@ void kernelCopyMaps(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
   }
 }
 
+__global__
+void kernelDialateMap(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
+                      const Vector3ui dims, ProbabilisticVoxel* othermap, int d)
+{
+  for (uint32_t i = blockIdx.x * blockDim.x + threadIdx.x; i < voxelmap_size; i += gridDim.x * blockDim.x)
+  {
+      if(voxelmap[i].getOccupancy() < 1)
+      {
+          continue;
+      }
+      
+      Vector3i pos;
+      pos.x = i % dims.x;
+      pos.y = (i / dims.x) % dims.y;
+      pos.z = (i / (dims.x*dims.y)) % dims.z;
+
+      for(int x = pos.x - d; x <= pos.x + d; x++)
+      {
+          if(x < 0 || x >= dims.x)
+          {
+              continue;
+          }
+          for(int y = pos.y - d; y <= pos.y + d; y++)
+          {
+              if(y < 0 || y >= dims.y)
+              {
+                  continue;
+              }
+              for(int z = pos.z - d; z <= pos.z + d; z++)
+              {
+                  if(z < 0 || z >= dims.z)
+              {
+                  continue;
+              }
+                  uint32_t ind = getVoxelIndexSigned(dims, x, y, z);
+                  othermap[ind].occupancy() = voxelmap[i].getOccupancy();
+              }
+          }
+      }
+  }
+    
+}
+
+
 /* Insert sensor data into voxel map.
  * Assumes sensor data is already transformed
  * into world coordinate system.

@@ -1,0 +1,4 @@
+mkdir build
+cmake .. -DCMAKE_PREFIX_PATH=/home/bradsaund/gvl
+make
+make install

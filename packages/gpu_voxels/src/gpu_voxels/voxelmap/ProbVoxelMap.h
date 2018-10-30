@@ -50,6 +50,8 @@ public:
 
   void copy(const ProbVoxelMap *other);
 
+  void dialate(const ProbVoxelMap *other, int dist);
+
   template<std::size_t length>
   void insertSensorData(const PointCloud &global_points, const Vector3f &sensor_pose, const bool enable_raycasting, const bool cut_real_robot,
                         const BitVoxelMeaning robot_voxel_meaning, BitVoxel<length>* robot_map = NULL);
