@@ -94,6 +94,50 @@ void kernelOverlaps(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
 }
 
 
+
+/* Counts number of occupied voxels in a ProbVoxelMap map
+ */
+__global__
+void kernelCountOccupied(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
+                         uint16_t* results)
+{
+  __shared__ uint16_t cache[cMAX_THREADS_PER_BLOCK];
+  uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
+  uint32_t cache_index = threadIdx.x;
+  cache[cache_index] = 0;
+
+  while (i < voxelmap_size)
+  {
+    if (voxelmap[i].isOccupied(1.0))
+    {
+      cache[cache_index] += 1;
+    }
+    i += blockDim.x * gridDim.x;
+  }
+
+  __syncthreads();
+
+  uint32_t j = blockDim.x / 2;
+
+  while (j != 0)
+  {
+    if (cache_index < j)
+    {
+      cache[cache_index] = cache[cache_index] + cache[cache_index + j];
+    }
+    __syncthreads();
+    j /= 2;
+  }
+
+  // copy results from this block to global memory
+  if (cache_index == 0)
+  {
+    results[blockIdx.x] = cache[0];
+  }
+}
+
+
+
 /***
  *  Counts the number of occupied voxels in a voxelmap (inefficiently)
  */

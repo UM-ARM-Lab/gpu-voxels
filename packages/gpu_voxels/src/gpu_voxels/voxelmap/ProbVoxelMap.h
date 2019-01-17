@@ -69,6 +69,8 @@ public:
 
   size_t collideWith(const voxelmap::BitVectorVoxelMap* map, float coll_threshold = 1.0, const Vector3i &offset = Vector3i());
   size_t collideWith(const voxelmap::ProbVoxelMap* map, float coll_threshold = 1.0, const Vector3i &offset = Vector3i());
+
+  size_t countOccupied();
   bool overlapsWith(const voxelmap::ProbVoxelMap* other, float coll_threshold = 1.0);
 
   void copyIthOccupied(const voxelmap::ProbVoxelMap* other, unsigned long copy_index);

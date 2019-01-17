@@ -147,6 +147,26 @@ bool ProbVoxelMap::overlapsWith(const voxelmap::ProbVoxelMap* other, float coll_
 
 
 
+size_t ProbVoxelMap::countOccupied()
+{
+    HANDLE_CUDA_ERROR(cudaDeviceSynchronize());
+    kernelCountOccupied<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size,
+                                                 m_dev_collision_check_results_counter);
+    CHECK_CUDA_ERROR();
+    HANDLE_CUDA_ERROR(cudaDeviceSynchronize());
+    HANDLE_CUDA_ERROR(
+        cudaMemcpy(m_collision_check_results_counter, m_dev_collision_check_results_counter,
+                   cMAX_NR_OF_BLOCKS * sizeof(uint16_t), cudaMemcpyDeviceToHost));
+
+
+    uint32_t num_occupied = 0;
+    for(uint32_t i=0; i< m_blocks; i++)
+    {
+        num_occupied += m_collision_check_results_counter[i];
+    }
+    return num_occupied;
+}
+
 void ProbVoxelMap::copyIthOccupied(const voxelmap::ProbVoxelMap* other, unsigned long copy_index)
 {
     unsigned long long int* d_counter;
