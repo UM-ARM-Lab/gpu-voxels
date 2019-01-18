@@ -138,31 +138,31 @@ void kernelCountOccupied(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_s
 
 
 
-/***
- *  Counts the number of occupied voxels in a voxelmap (inefficiently)
- */
-__global__
-void kernelCountOccupied(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
-                         unsigned long long int* counter)
-{
-    *counter = 0;
-    __syncthreads();
-    uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned long long threadtotal = 0;
+// /***
+//  *  Counts the number of occupied voxels in a voxelmap (inefficiently)
+//  */
+// __global__
+// void kernelCountOccupied(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_size,
+//                          unsigned long long int* counter)
+// {
+//     *counter = 0;
+//     __syncthreads();
+//     uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
+//     unsigned long long threadtotal = 0;
 
-    while(i < voxelmap_size)
-    {
-        if(voxelmap[i].isOccupied(1.0))
-        {
-            threadtotal += 1;
-        }
-        i += blockDim.x * gridDim.x;
-    }
-    if(threadtotal > 0)
-    {
-        atomicAdd(counter, threadtotal);
-    }
-}
+//     while(i < voxelmap_size)
+//     {
+//         if(voxelmap[i].isOccupied(1.0))
+//         {
+//             threadtotal += 1;
+//         }
+//         i += blockDim.x * gridDim.x;
+//     }
+//     if(threadtotal > 0)
+//     {
+//         atomicAdd(counter, threadtotal);
+//     }
+// }
 
 /*
  *   Copies the ith index encountered (order not guaranteed due to parallelism) 
