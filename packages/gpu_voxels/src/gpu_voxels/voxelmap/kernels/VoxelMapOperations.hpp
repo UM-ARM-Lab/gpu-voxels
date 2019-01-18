@@ -137,6 +137,43 @@ void kernelCountOccupied(ProbabilisticVoxel* voxelmap, const uint32_t voxelmap_s
 }
 
 
+struct check_is_occupied
+{
+    __host__ __device__
+    bool operator()(const ProbabilisticVoxel &v)
+    {
+        return v.isOccupied(1.0);
+    }
+};
+
+struct map_to_voxels
+{
+    Vector3ui dims;
+
+    map_to_voxels(Vector3ui dims): dims(dims) {};
+    
+    __host__ __device__
+    Vector3ui operator()(uint32_t ind)
+    {
+        return mapToVoxels(ind, dims);
+    }
+};
+    
+struct map_to_voxel_centers
+{
+    Vector3ui dims;
+    float side_length;
+
+    map_to_voxel_centers(Vector3ui dims, float side_length): dims(dims), side_length(side_length) {};
+    
+    __host__ __device__
+    Vector3f operator()(uint32_t ind)
+    {
+        return getVoxelCenter(side_length, mapToVoxels(ind, dims));
+    }
+};
+
+
 
 // /***
 //  *  Counts the number of occupied voxels in a voxelmap (inefficiently)

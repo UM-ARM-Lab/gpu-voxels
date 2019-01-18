@@ -28,6 +28,7 @@
 #include <gpu_voxels/voxelmap/kernels/VoxelMapOperations.hpp>
 #include <gpu_voxels/voxel/BitVoxel.hpp>
 #include <gpu_voxels/voxel/ProbabilisticVoxel.hpp>
+#include <thrust/copy.h>
 
 namespace gpu_voxels {
 namespace voxelmap {
@@ -165,6 +166,30 @@ size_t ProbVoxelMap::countOccupied()
         num_occupied += m_collision_check_results_counter[i];
     }
     return num_occupied;
+}
+
+std::vector<Vector3f> ProbVoxelMap::getOccupiedCenters()
+{
+    thrust::device_vector<uint32_t> dev_occ_indices(m_voxelmap_size);
+    thrust::counting_iterator<uint32_t> first(0);
+    thrust::counting_iterator<uint32_t> last = first + m_voxelmap_size;
+    
+    typedef thrust::device_vector<uint32_t>::iterator IndexIterator;
+    IndexIterator dev_occ_indices_end = thrust::copy_if(first, last,
+                                                        thrust::device_pointer_cast(m_dev_data),
+                                                        dev_occ_indices.begin(),
+                                                        check_is_occupied());
+
+    thrust::host_vector<uint32_t> occ_indices(dev_occ_indices.begin(), dev_occ_indices_end);
+
+    thrust::device_vector<Vector3f> dev_centers(dev_occ_indices_end - dev_occ_indices.begin());
+    thrust::transform(dev_occ_indices.begin(), dev_occ_indices_end,
+                      dev_centers.begin(),
+                      map_to_voxel_centers(m_dim, m_voxel_side_length));
+    
+    thrust::host_vector<Vector3f> centers(dev_centers);
+    std::vector<Vector3f> stdcenters(centers.begin(), centers.end());
+    return stdcenters;
 }
 
 void ProbVoxelMap::copyIthOccupied(const voxelmap::ProbVoxelMap* other, unsigned long copy_index)
