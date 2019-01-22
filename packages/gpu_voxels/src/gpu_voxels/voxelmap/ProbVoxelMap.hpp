@@ -180,7 +180,6 @@ std::vector<Vector3f> ProbVoxelMap::getOccupiedCenters() const
                                                         dev_occ_indices.begin(),
                                                         check_is_occupied());
 
-    thrust::host_vector<uint32_t> occ_indices(dev_occ_indices.begin(), dev_occ_indices_end);
 
     thrust::device_vector<Vector3f> dev_centers(dev_occ_indices_end - dev_occ_indices.begin());
     thrust::transform(dev_occ_indices.begin(), dev_occ_indices_end,
@@ -190,6 +189,25 @@ std::vector<Vector3f> ProbVoxelMap::getOccupiedCenters() const
     thrust::host_vector<Vector3f> centers(dev_centers);
     std::vector<Vector3f> stdcenters(centers.begin(), centers.end());
     return stdcenters;
+}
+
+thrust::device_vector<Vector3ui> ProbVoxelMap::getDeviceOccupiedCoords() const
+{
+    thrust::device_vector<uint32_t> dev_occ_indices(m_voxelmap_size);
+    thrust::counting_iterator<uint32_t> first(0);
+    thrust::counting_iterator<uint32_t> last = first + m_voxelmap_size;
+    
+    typedef thrust::device_vector<uint32_t>::iterator IndexIterator;
+    IndexIterator dev_occ_indices_end = thrust::copy_if(first, last,
+                                                        thrust::device_pointer_cast(m_dev_data),
+                                                        dev_occ_indices.begin(),
+                                                        check_is_occupied());
+
+    thrust::device_vector<Vector3ui> dev_coords(dev_occ_indices_end - dev_occ_indices.begin());
+    thrust::transform(dev_occ_indices.begin(), dev_occ_indices_end,
+                      dev_coords.begin(),
+                      map_to_voxels(m_dim));
+    return dev_coords;
 }
 
 void ProbVoxelMap::copyIthOccupied(const voxelmap::ProbVoxelMap* other, unsigned long copy_index)

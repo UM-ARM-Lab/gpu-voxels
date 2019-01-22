@@ -103,6 +103,10 @@ public:
   {
     return thrust::raw_pointer_cast(m_dev_coord_list.data());
   }
+  const Vector3ui* getDeviceCoordPtr() const 
+  {
+    return thrust::raw_pointer_cast(m_dev_coord_list.data());
+  }
 
   inline virtual void* getVoidDeviceDataPtr()
   {
@@ -198,6 +202,9 @@ public:
   // virtual size_t collideVoxellists(const TemplateVoxelList<Voxel, VoxelIDType> *other, const Vector3i &offset,
   //                                  thrust::device_vector<bool>& collision_stencil) const;
 
+  size_t collideVoxellists(const TemplateVoxelList<ProbabilisticVoxel, VoxelIDType> *other, const Vector3i &offset,
+                                   thrust::device_vector<bool>& collision_stencil) const;
+
   size_t collideVoxellists(const TemplateVoxelList<BitVectorVoxel, VoxelIDType> *other, const Vector3i &offset,
                                    thrust::device_vector<bool>& collision_stencil) const;
 
@@ -251,6 +258,18 @@ public:
     Cube operator()(const Vector3ui& coords, const CountingVoxel& voxel) const {
 
       if (voxel.getCount() > 0)
+      {
+        return Cube(1, coords, eBVM_OCCUPIED);
+      }
+      else
+      {
+        return Cube(1, coords, eBVM_FREE);
+      }
+    }
+    __host__ __device__
+    Cube operator()(const Vector3ui& coords, const ProbabilisticVoxel& voxel) const {
+
+      if (voxel.isOccupied(1.0))
       {
         return Cube(1, coords, eBVM_OCCUPIED);
       }

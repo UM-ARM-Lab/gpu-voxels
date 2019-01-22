@@ -27,6 +27,7 @@
 #include <gpu_voxels/voxellist/kernels/VoxelListOperations.hpp>
 #include <gpu_voxels/voxelmap/kernels/VoxelMapOperations.h>
 #include <gpu_voxels/voxelmap/BitVoxelMap.hpp>
+#include <gpu_voxels/voxelmap/ProbVoxelMap.h>
 #include <thrust/execution_policy.h>
 #include <thrust/unique.h>
 #include <thrust/pair.h>
@@ -210,6 +211,15 @@ void TemplateVoxelList<Voxel, VoxelIDType>::make_unique()
   }
   LOGGING_DEBUG_C(VoxellistLog, TemplateVoxelList, "List size after make_unique: " << m_dev_list.size() << endl);
 }
+
+template<class Voxel, class VoxelIDType>
+size_t TemplateVoxelList<Voxel, VoxelIDType>::collideVoxellists(const TemplateVoxelList<ProbabilisticVoxel, VoxelIDType> *other,
+                                                                const Vector3i &offset, thrust::device_vector<bool>& collision_stencil) const
+{
+  LOGGING_ERROR_C(VoxellistLog, TemplateVoxelList, "This collision operation is not supported! Not performing collision check." << endl);
+  return 0;
+}
+
 
 template<class Voxel, class VoxelIDType>
 size_t TemplateVoxelList<Voxel, VoxelIDType>::collideVoxellists(const TemplateVoxelList<CountingVoxel, VoxelIDType> *other,
@@ -797,6 +807,14 @@ bool TemplateVoxelList<CountingVoxel, MapVoxelID>::merge(const GpuVoxelsMapShare
 
       return true;
     }
+
+  case MT_PROBAB_VOXELMAP:
+  {
+      gpu_voxels::voxelmap::ProbVoxelMap* m = other->as<voxelmap::ProbVoxelMap>();
+      thrust::device_vector<Vector3ui> occupied_coords = m->getDeviceOccupiedCoords();
+      insertCoordinateList(thrust::raw_pointer_cast(&occupied_coords.front()),
+                           occupied_coords.size(), eBVM_OCCUPIED);
+  }
     default:
     {
       LOGGING_ERROR_C(VoxellistLog, TemplateVoxelList, GPU_VOXELS_MAP_OPERATION_NOT_YET_SUPPORTED << endl);

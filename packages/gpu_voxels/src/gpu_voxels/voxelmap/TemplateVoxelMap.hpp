@@ -1047,6 +1047,11 @@ bool TemplateVoxelMap<Voxel>::merge(const GpuVoxelsMapSharedPtr other, const Vec
 
 template<class Voxel>
 bool TemplateVoxelMap<Voxel>::merge(const GpuVoxelsMapSharedPtr other, const Vector3i &voxel_offset, const BitVoxelMeaning* new_meaning) {
+    return merge(other.get(), voxel_offset, new_meaning);
+}
+
+template<class Voxel>
+bool TemplateVoxelMap<Voxel>::merge(const GpuVoxelsMap *other, const Vector3i &voxel_offset, const BitVoxelMeaning* new_meaning) {
   if (voxel_offset != Vector3i()) {
     LOGGING_ERROR_C(VoxelmapLog, TemplateVoxelMap, "You tried to apply an offset while merging a VoxelList into a DistanceVoxelMap (not supported yet)!" << endl);
     return false;
@@ -1060,21 +1065,21 @@ bool TemplateVoxelMap<Voxel>::merge(const GpuVoxelsMapSharedPtr other, const Vec
   {
     case MT_BITVECTOR_VOXELLIST:
     {
-      voxellist::TemplateVoxelList<BitVectorVoxel, MapVoxelID>* voxelList = other->as<voxellist::TemplateVoxelList<BitVectorVoxel, MapVoxelID> >();
+      const voxellist::TemplateVoxelList<BitVectorVoxel, MapVoxelID>* voxelList = other->as<voxellist::TemplateVoxelList<BitVectorVoxel, MapVoxelID> >();
       insertCoordinateList(voxelList->getDeviceCoordPtr(), voxelList->m_dev_coord_list.size(), eBVM_OCCUPIED);
       return true;
     }
 
     case MT_PROBAB_VOXELLIST:
     {
-      voxellist::TemplateVoxelList<ProbabilisticVoxel, MapVoxelID>* voxelList = other->as<voxellist::TemplateVoxelList<ProbabilisticVoxel, MapVoxelID> >();
+      const voxellist::TemplateVoxelList<ProbabilisticVoxel, MapVoxelID>* voxelList = other->as<voxellist::TemplateVoxelList<ProbabilisticVoxel, MapVoxelID> >();
       insertCoordinateList(voxelList->getDeviceCoordPtr(), voxelList->m_dev_coord_list.size(), eBVM_OCCUPIED);
       return true;
     }
 
     case MT_COUNTING_VOXELLIST:
     {
-      voxellist::TemplateVoxelList<CountingVoxel, MapVoxelID>* voxelList = other->as<voxellist::TemplateVoxelList<CountingVoxel, MapVoxelID> >();
+      const voxellist::TemplateVoxelList<CountingVoxel, MapVoxelID>* voxelList = other->as<voxellist::TemplateVoxelList<CountingVoxel, MapVoxelID> >();
       insertCoordinateList(voxelList->getDeviceCoordPtr(), voxelList->m_dev_coord_list.size(), eBVM_OCCUPIED);
       return true;
     }

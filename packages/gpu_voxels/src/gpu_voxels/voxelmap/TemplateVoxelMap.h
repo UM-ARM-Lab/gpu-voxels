@@ -169,6 +169,8 @@ public:
   virtual bool merge(const GpuVoxelsMapSharedPtr other, const Vector3f &metric_offset, const BitVoxelMeaning* new_meaning = NULL);
   virtual bool merge(const GpuVoxelsMapSharedPtr other, const Vector3i &voxel_offset = Vector3i(), const BitVoxelMeaning* new_meaning = NULL);
 
+  virtual bool merge(const GpuVoxelsMap *other, const Vector3i &voxel_offset = Vector3i(), const BitVoxelMeaning* new_meaning = NULL);
+
   /**
    * @brief insertDilatedCoordinateList Dilates the given coordinates and stores the result in this voxelmap
    * WARNING: Can lead to unexpected behavior due to race-conditions, when multiple coordinates try to dilate towards the same

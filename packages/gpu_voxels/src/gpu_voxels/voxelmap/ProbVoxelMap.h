@@ -71,6 +71,7 @@ public:
   size_t collideWith(const voxelmap::ProbVoxelMap* map, float coll_threshold = 1.0, const Vector3i &offset = Vector3i());
 
   std::vector<Vector3f> getOccupiedCenters() const;
+  thrust::device_vector<Vector3ui> getDeviceOccupiedCoords() const;
   size_t countOccupied() const;
   bool overlapsWith(const voxelmap::ProbVoxelMap* other, float coll_threshold = 1.0) const;
 

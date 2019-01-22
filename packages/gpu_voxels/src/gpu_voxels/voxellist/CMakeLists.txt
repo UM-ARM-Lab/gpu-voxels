@@ -17,6 +17,7 @@ ICMAKER_ADD_HEADERS(
   VoxelList.h
   AbstractVoxelList.h
   TemplateVoxelList.h
+  ProbVoxelList.h
   BitVoxelList.h
   CountingVoxelList.h
   )
@@ -35,6 +36,8 @@ ICMAKER_ADD_CUDA_FILES(
   AbstractVoxelList.cu
   TemplateVoxelList.h
   TemplateVoxelList.hpp
+  ProbVoxelList.h
+  ProbVoxelList.hpp
   BitVoxelList.h
   BitVoxelList.hpp
   CountingVoxelList.h
