@@ -61,6 +61,9 @@
 #include <thrust/scan.h>
 
 #define GLM_FORCE_RADIANS
+#if defined(__CUDACC__) && !defined(CUDA_VERSION) && !defined(GLM_FORCE_CUDA) // fix Cuda10 & Ubuntu14.04 error
+#  include <cuda.h>  // ensure CUDA_VERSION is defined, nvcc does not define it
+#endif
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -153,7 +156,7 @@ public:
   Visualizer();
   ~Visualizer();
 
-  bool initalizeVisualizer(int& argc, char *argv[]);
+  bool initializeVisualizer(int& argc, char *argv[]);
   void initializeDrawTextFlags();
 
   //callbacks
@@ -260,9 +263,9 @@ private:
    */
   bool initGL(int32_t *argc, char **argv);
   /**
-   * Initializes the visualizer context with the parameter from the config xml file
+   * Initializes the visualizer context 
    */
-  bool initializeContextFromXML(int& argc, char *argv[]);
+  bool initializeContextFromXML();
 
   void deleteGLBuffer(DataContext* con);
   void generateGLBufferForDataContext(DataContext* con);

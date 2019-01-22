@@ -63,7 +63,7 @@ public:
   typedef thrust::tuple<keyIterator, coordIterator, voxelIterator> keyCoordVoxelIteratorTriple;
   typedef thrust::zip_iterator<keyCoordVoxelIteratorTriple> keyCoordVoxelZipIterator;
 
-  TemplateVoxelList(const Vector3ui ref_map_dim, const float voxel_sidelength, const MapType map_type);
+  TemplateVoxelList(const Vector3ui ref_map_dim, const float voxel_side_length, const MapType map_type);
 
   //! Destructor
   virtual ~TemplateVoxelList();
@@ -76,7 +76,7 @@ public:
   //! get thrust triple to the end of all data vectors
   virtual keyCoordVoxelZipIterator getEndTripleZipIterator();
 
-  //! get acces to data vectors on device
+  //! get access to data vectors on device
   typename thrust::device_vector<Voxel>::iterator getDeviceDataVectorBeginning()
   {
     return m_dev_list.begin();
@@ -122,7 +122,12 @@ public:
 
   virtual void insertPointCloud(const PointCloud &pointcloud, const BitVoxelMeaning voxel_meaning);
 
-  virtual void insertPointCloud(const Vector3f* points_d, uint32_t size, const BitVoxelMeaning voxel_meaning);
+  virtual void insertPointCloud(const Vector3f* d_points, uint32_t size, const BitVoxelMeaning voxel_meaning);
+
+
+  virtual void insertCoordinateList(const std::vector<Vector3ui> &coordinates, const BitVoxelMeaning voxel_meaning);
+
+  virtual void insertCoordinateList(const Vector3ui* d_coordinates, uint32_t size, const BitVoxelMeaning voxel_meaning);
 
   /**
    * @brief insertMetaPointCloud Inserts a MetaPointCloud into the map.
@@ -146,7 +151,7 @@ public:
                                                           const std::vector<BitVector<BIT_VECTOR_LENGTH> >& collision_masks = std::vector<BitVector<BIT_VECTOR_LENGTH> >(),
                                                           BitVector<BIT_VECTOR_LENGTH>* colliding_meanings = NULL);
 
-  virtual bool merge(const GpuVoxelsMapSharedPtr other, const Vector3f &metric_offset = Vector3f(), const BitVoxelMeaning* new_meaning = NULL);
+  virtual bool merge(const GpuVoxelsMapSharedPtr other, const Vector3f &metric_offset, const BitVoxelMeaning* new_meaning = NULL);
   virtual bool merge(const GpuVoxelsMapSharedPtr other, const Vector3i &voxel_offset = Vector3i(), const BitVoxelMeaning* new_meaning = NULL);
 
   virtual bool subtract(const TemplateVoxelList<Voxel, VoxelIDType> *other, const Vector3f &metric_offset = Vector3f());
@@ -163,6 +168,9 @@ public:
 
   virtual void clearMap();
   //! set voxel occupancies for a specific voxelmeaning to zero
+
+  virtual Vector3f getCenterOfMass() const;
+  virtual Vector3f getCenterOfMass(Vector3ui lower_bound, Vector3ui upper_bound) const;
 
   virtual bool writeToDisk(const std::string path);
 
@@ -228,6 +236,8 @@ public:
    */
   virtual void screendump(bool with_voxel_content = true) const;
 
+  virtual void clone(const TemplateVoxelList<Voxel, VoxelIDType>& other);
+
   struct VoxelToCube
   {
     VoxelToCube() {}
@@ -240,7 +250,7 @@ public:
     __host__ __device__
     Cube operator()(const Vector3ui& coords, const CountingVoxel& voxel) const {
 
-      if (voxel.getCount() > 1)
+      if (voxel.getCount() > 0)
       {
         return Cube(1, coords, eBVM_OCCUPIED);
       }

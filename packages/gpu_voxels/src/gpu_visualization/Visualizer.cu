@@ -24,6 +24,8 @@
 #include <gpu_visualization/shaders/SimpleVertexShader.h>
 #include <gpu_voxels/voxelmap/kernels/VoxelMapOperations.h>
 
+#include <ctime>
+
 namespace gpu_voxels {
 namespace visualization {
 
@@ -180,40 +182,9 @@ bool Visualizer::initGL(int32_t* argc, char**argv)
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   ExitOnGLError("Could not set OpenGL blend options");
 
-  // Create and compile the GLSL program from the shaders bfs = boost::filesystem
-  char* path_home;
-  path_home = getenv("MCAHOME");
-  bfs::path full_path;
-  if (path_home != NULL)
-  {
-    full_path = bfs::path(path_home) / "build";
-  }
-  else
-  {
-    LOGGING_INFO_C(Visualization, Visualizer,
-                   "Environment variables not set (MCAHOME)! The default path is used instead." << endl);
-    full_path = bfs::path(bfs::initial_path<bfs::path>());
-    full_path = bfs::system_complete(bfs::path(argv[0]));
-    full_path.remove_filename();
-    if (full_path.leaf() == ".")
-    {
-      full_path.remove_leaf();
-    }
-    full_path.remove_leaf();
-  }
-  full_path /= "shader";
-  LOGGING_INFO_C(Visualization, Visualizer, "Search path of the shaders is: " << full_path.c_str() << endl);
-
-  //bfs::path vertex_shader_path = full_path / "SimpleVertexShader.vertexshader";
-  //bfs::path fragment_shader_path = full_path / "SimpleFragmentShader.fragmentshader";
+  // Create and compile the GLSL program from the shaders
   m_programID = loadShaders(SimpleVertexShader::get(), SimpleFragmentShader::get());
-
-  //vertex_shader_path = full_path / "colormap.vertexshader";
-  //fragment_shader_path = full_path / "colormap.fragmentshader";
   m_colormap_programID = loadShaders(ColormapVertexShader::get(), ColormapFragmentShader::get());
-
-  //vertex_shader_path = full_path / "lighting.vertexshader";
-  //fragment_shader_path = full_path / "lighting.fragmentshader";
   m_lighting_programID = loadShaders(LightingVertexShader::get(), LightingFragmentShader::get());
 
   // get the positions of the uniform variables of the lighting shaders
@@ -251,10 +222,9 @@ bool Visualizer::initGL(int32_t* argc, char**argv)
   return true;
 }
 
-bool Visualizer::initializeContextFromXML(int& argc, char *argv[])
+bool Visualizer::initializeContextFromXML()
 {
   m_interpreter = new XMLInterpreter();
-  m_interpreter->initialize(argc, argv);
 
   m_max_mem = m_interpreter->getMaxMem();
   m_max_fps = m_interpreter->getMaxFps();
@@ -266,18 +236,32 @@ bool Visualizer::initializeContextFromXML(int& argc, char *argv[])
   return suc;
 }
 
-bool Visualizer::initalizeVisualizer(int& argc, char *argv[])
+bool Visualizer::initializeVisualizer(int& argc, char *argv[])
 {
-  try
+  LOGGING_INFO_C(Visualization, Visualizer, "Trying to open the Visualizer shared memory segment created by a process using VisProvider." << endl);
+  time_t total_wait = 30; // total time used for trying to open shared memory file (seconds)
+  size_t period = 500; // time to sleep between consecutive tries (milliseconds)
+
+  time_t start = time(0);
+  bool success = false;
+  while (!success && time(0) < start + total_wait)
   {
-    m_shm_manager_visualizer = new SharedMemoryManagerVisualizer();
-  } catch (boost::interprocess::interprocess_exception& e)
+    try
+    {
+      m_shm_manager_visualizer = new SharedMemoryManagerVisualizer();
+      success = true;
+    } catch (boost::interprocess::interprocess_exception& e)
+    {
+      usleep(period * 1000);
+    }
+  }
+  if (!success)
   {
     m_shm_manager_visualizer = NULL;
     LOGGING_WARNING_C(Visualization, Visualizer, "Couldn't open the shared memory segment of Visualizer!" << endl);
   }
 
-  return initializeContextFromXML(argc, argv) & initGL(&argc, argv);
+  return initializeContextFromXML() & initGL(&argc, argv);
 }
 
 void Visualizer::initializeDrawTextFlags()
@@ -796,7 +780,7 @@ bool Visualizer::fillGLBufferWithoutPrecounting(VoxelmapContext* context)
  * Fills the VBO from a Cubelist extracted from Voxellist or Octree with the translation_scale vectors.
  */
 void Visualizer::fillGLBufferWithCubelist(CubelistContext* context, uint32_t index)
-{ 
+{
   thrust::device_vector<uint32_t> indices(context->m_num_voxels_per_type.size(), 0);
   calculateNumberOfCubeTypes(context);
 
@@ -1660,7 +1644,7 @@ void Visualizer::renderFunction(void)
         if (updateVoxelListContext(m_cur_context->m_voxel_lists[i], i))
         {
           fillGLBufferWithCubelist(m_cur_context->m_voxel_lists[i], i);
-          cudaIpcCloseMemHandle(m_cur_context->m_voxel_lists[i]->getCubesDevicePointer()); // unmap shared mem
+          m_cur_context->m_voxel_lists[i]->unmapCubesShm();
         }
         m_shm_manager_voxellists->setBufferSwappedToFalse(i);
       }
@@ -2815,7 +2799,7 @@ std::stringstream returnString;
       cudaFree(d_found_flag);
 
       // unmap the CUDA shared mem
-      cudaIpcCloseMemHandle(vm_context->getCubesDevicePointer());
+      vm_context->unmapCubesShm();
     }
   }
 

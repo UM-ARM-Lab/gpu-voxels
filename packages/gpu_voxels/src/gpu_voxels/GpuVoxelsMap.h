@@ -115,6 +115,11 @@ public:
 
   virtual void insertPointCloud(const PointCloud &pointcloud, const BitVoxelMeaning voxel_meaning) = 0;
 
+
+  virtual void insertCoordinateList(const std::vector<Vector3ui> &coordinates, const BitVoxelMeaning voxel_meaning) = 0;
+
+  virtual void insertCoordinateList(const Vector3ui *d_coordinates, uint32_t size, const BitVoxelMeaning voxel_meaning) = 0;
+
   /**
    * @brief insertMetaPointCloud Inserts a MetaPointCloud into the map.
    * @param meta_point_cloud The MetaPointCloud to insert
@@ -199,7 +204,7 @@ public:
    * \param new_meaning If not NULL, the meaning of the copied Voxels is set to this meaning.
    * \return true if succeeded, false otherwise
    */
-  virtual bool merge(const GpuVoxelsMapSharedPtr other, const Vector3f &metric_offset = Vector3f(), const BitVoxelMeaning* new_meaning = NULL) = 0;
+  virtual bool merge(const GpuVoxelsMapSharedPtr other, const Vector3f &metric_offset, const BitVoxelMeaning* new_meaning = NULL) = 0;
 
   /*!
    * \brief merge copies the data from the other map into this map.

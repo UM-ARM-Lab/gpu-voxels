@@ -434,6 +434,21 @@ void kernelInsertGlobalPointCloud(Voxel* voxelmap, const Vector3ui map_dim, cons
                                   const Vector3f* points, const std::size_t sizePoints, const BitVoxelMeaning voxel_meaning,
                                   bool *points_outside_map);
 
+template<class Voxel>
+__global__
+void kernelInsertCoordinateTuple(Voxel* voxelmap, const Vector3ui map_dim, const float voxel_side_length,
+                                  const Vector3ui* coordinates, const std::size_t sizePoints, const BitVoxelMeaning voxel_meaning,
+                                  bool *points_outside_map);
+
+template<class Voxel>
+__global__
+void kernelInsertDilatedCoordinateTuples(Voxel* voxelmap, const Vector3ui dimensions, const float voxel_side_length,
+                                  const Vector3ui *coordinates, const std::size_t sizePoints, const BitVoxelMeaning voxel_meaning,
+                                  bool *points_outside_map);
+
+template<class Voxel>
+__global__
+void kernelErode(Voxel* voxelmap_out, const Voxel* voxelmap_in, const Vector3ui dimensions, float occupied_threshold, float erode_threshold);
 
 template<class Voxel>
 __global__

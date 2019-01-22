@@ -338,7 +338,7 @@ void registerOctreeFromSharedMemory(uint32_t index)
   {
     SharedMemoryManagerOctrees shm_manager_octrees;
     std::string map_name = shm_manager_octrees.getNameOfOctree(index);
-    LOGGING_INFO(Visualization, "Providing a Octree called \""<< map_name << "\"." << endl);
+    LOGGING_INFO(Visualization, "Providing an Octree called \""<< map_name << "\"." << endl);
     vis->registerOctree(index, map_name);
   } catch (interprocess_exception& e)
   {
@@ -364,11 +364,11 @@ void registerPrimitiveArrayFromSharedMemory(uint32_t index)
 
 int32_t main(int32_t argc, char* argv[])
 {
-// Initialize the logging
+// Initialize the logging framework. Also calls icl_core::config::initialize
   icl_core::logging::initialize(argc, argv);
 
   LOGGING_INFO(Visualization, "Starting the gpu_voxels Visualizer." << endl);
-  vis->initalizeVisualizer(argc, argv);
+  vis->initializeVisualizer(argc, argv);
 
   uint32_t num_voxelmaps = getNumberOfVoxelmapsFromSharedMem();
   LOGGING_INFO(Visualization, "Number of voxel maps that will be drawn: " << num_voxelmaps << endl);
@@ -398,9 +398,34 @@ int32_t main(int32_t argc, char* argv[])
     registerPrimitiveArrayFromSharedMemory(i);
   }
   vis->initializeDrawTextFlags();
-  runVisualisation(&argc, argv);
 
-  LOGGING_INFO(Visualization, "Exiting..\n");
+  // TODO: This is catching an arbitrary exception, that is rather a symptom than the cause of the error.
+  // If the implementation of the visualization changes, it might throw another exception.
+  // This case should rather be caught before this point is reached and the visualizer works with dangling pointers.
+  try
+  {
+    runVisualisation(&argc, argv);
+  } catch (const thrust::system::system_error& e)
+  {
+    // TODO: Is this path portable?
+    std::string shmPath("/dev/shm/");
+    LOGGING_ERROR(Visualization, "Visualization failed, possibly caused by corrupted shared memory files!" << endl
+                                 << "Error message: '" << e.what() << "'. Removing shared memory files in " << shmPath << "..." << endl);
+
+    boost::filesystem::remove(boost::filesystem::path(shmPath + shm_segment_name_octrees));
+    boost::filesystem::remove(boost::filesystem::path(shmPath + shm_segment_name_voxelmaps));
+    boost::filesystem::remove(boost::filesystem::path(shmPath + shm_segment_name_voxellists));
+    boost::filesystem::remove(boost::filesystem::path(shmPath + shm_segment_name_primitive_array));
+    boost::filesystem::remove(boost::filesystem::path(shmPath + shm_segment_name_visualizer));
+    LOGGING_ERROR(Visualization, "Cleaned up shared memory. Please try to restart your GPU-Voxels processes and then the visualizer." << endl);
+
+    LOGGING_INFO(Visualization, "Exiting.." << endl);
+    delete vis;
+    icl_core::logging::LoggingManager::instance().shutdown();
+    return EXIT_FAILURE;
+  }
+
+  LOGGING_INFO(Visualization, "Exiting.." << endl);
   delete vis;
   icl_core::logging::LoggingManager::instance().shutdown();
   return EXIT_SUCCESS;

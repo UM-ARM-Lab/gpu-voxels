@@ -469,3 +469,97 @@ Known issues:
   - patch for /usr/include/glm/detail/func_common.inl in packages/gpu_voxels/doc/glm_fix_issu530.patch
 
 
+V1.2.1 (2018-08-28):
+====================
+Octree and 18.04 bugfixes, insertCoordinateList and geometry generation with integer coordinates.
+
+Important Bufixes:
+- Octrees issues on Pascal GPUs have been fixed. Fixes #60. Thanks to Florian!
+- Icmaker updated to avoid issues on CMake 3.6.2 and newer. Fixes #58
+- Fix Boost 1.65.1 compatibility issues for Ubuntu 18.04
+- Fix CUBIN compilation in code=sm_** settings. Thanks to @r2b0 and Florian! Fixes #73 and #54
+
+Known Issues:
+- the GLM headers provided by Ubuntu 16.04 have to be patched to allow usage of the visualizer.
+  - see https://github.com/g-truc/glm/issues/530
+  - patch for /usr/include/glm/detail/func_common.inl in packages/gpu_voxels/doc/glm_fix_issu530.patch
+- Cuda 8.0: Code compiled with Cuda 8.0 works fine with older GPU drivers such as 375.66, but there are runtime errors with driver 384.111 and newer
+  - produces runtime error "PTX JIT compilation failed"
+- Eigen 3.3.4 and 3.3.5 issue with CUDA 9.0, 9.1, 9.2: Error: class "Eigen::half" has no member "x".
+  - Can be fixed by using latest unstable version of Eigen
+- The constant cMAX_NR_OF_BLOCKS is currently limited to 65535, while current CUDA devices support over 2 billion blocks
+  - relevant during computeLinearLoad calls and collision checking
+
+Possibly breaking changes:
+- TemplateVoxelList::getDimensions returns (size,1,1) instead of (size,0,0)
+  - Important: TemplateVoxelList::getDimensions does not depend on m_ref_map_dim, unlike TemplateVoxelList::getMetricDimensions!
+
+Additional changes:
+- New example: GeometryGeneration showcases 
+- New function GpuVoxelsMap::insertCoordinateList and geometry generation with integer coordinates 
+  - Example: geometry_generation::createBoxOfPoints(corner_min, corner_max, delta, side_length);
+  - Available for maps, lists and octrees. Can create boxes, spheres and cylinders. Thanks to Herbert for his contribution!
+- GpuVoxels::insertBoxIntoMap now uses the integer coordinate based creation and insertion functionality, avoiding discretization issues
+- Remove warnings regarding logging and visualizer initialization. Fixes #72
+- Fix visualizer warning by always creating the shared memory segment on initialization. Fixes #72
+- Removed unused shader loading code
+- Updated URDF code for compatibility with new ROS releases
+
+V1.2.2 (2018-08-29):
+====================
+Fix missing CUDA include and link directive in gvl_ompl_planner and example_howto_link
+
+
+V1.3.0 (2019-01-07):
+====================
+CUDA 10.0 and Ubuntu 18.04 compatibility. Use C++11 by default. Add
+ROS-connected DistanceROSDemo example. Improve Visualizer Shared Memory error handling.
+
+Major changes:
+- Added DistanceROSDemo to show-case a ROS node subscribing to PCL point-clouds.
+- Implemented additional merge functions
+  - Added TemplateVoxelMap.merge(TemplateVoxelList)
+  - Added functions to merge TemplateVoxelList into BitVoxelList and CountingVoxelList;
+- Added TemplateVoxelMap::clone and TemplateVoxelList::clone, was previously
+only available in DistanceVoxelMap
+- Added functions that implement the morphological operations Closing, Dilation and Erosion
+- Added function getCenterOfMass to TemplateVoxelList and TemplateVoxelMap
+- Added BitVoxelList::copyCoordsToHostBvmBounded: allows the selective copy of voxels with BitVoxelMeanings in a given range
+- Updated icmaker and icl_core to fix issues with new Boost and CMake versions
+
+Possibly breaking changes:
+- C++11 support is active by default. The new "indigo" branch has C++11 deactivated by default, is identical otherwise
+- changed BitVoxelList::findMatchingVoxels signature:
+  - Implicitly set argument list1 to 'this'.
+  - Add option omit_coords: if true, output VoxelLists will only contain voxel IDs and data but the coord_list will be empty (default). If set to false, voxel coordinates will also be copied to the output lists.
+
+Additional changes:
+- gvl_ompl_planner:
+  - fixed collision check threshold value
+  - updated comments and logging output
+- gvl_ompl_planner: added comment regarding LD_LIBRARY_PATH
+- fix MetaPointCloud name unknown for robot links without geometry
+- updated stb_image.h to version 2.19
+- fix ROS&Urdf CMake discovery issue
+- add tests for TemplateVoxelList and TemplateVoxelMap clone
+- add hollie_from_pointcloud2.pcd for example DistanceVoxelTest.cpp
+- fix a CountingVoxelList visualization issue
+
+Known Issues:
+- Eigen 3 issues: can be fixed by cloning a more current unstable Eigen version and placing it in CMAKE_PREFIX_PATH
+  + on Ubuntu 18.04 with CUDA 10.0: "math_functions.hpp not found"
+  + Eigen 3.3.4 and 3.3.5 with CUDA 9.0, 9.1, 9.2: Error: class "Eigen::half" has no member "x"
+  + see http://eigen.tuxfamily.org/index.php?title=Main_Page#Download
+- If the ROS dependency was found, but the GPU-Voxels URDF features are still unabailable, run `source /opt/ros/YOUR_ROS_DISTRO/setup.bash` before running cmake.
+- Cuda 8.0: Code compiled with Cuda 8.0 works fine with older GPU drivers such as 375.66, but there are runtime errors with driver 384.111 and newer ("PTX JIT compilation failed"). 
+  + Easy fix: use Cuda 10 with a current 410 or newer driver version. Cuda 10 is also available for Ubuntu 14.04 and 16.04.
+- The GLM headers provided by Ubuntu 16.04 have to be patched to allow usage of the visualizer.
+  - see https://github.com/g-truc/glm/issues/530
+  - patch for /usr/include/glm/detail/func_common.inl in packages/gpu_voxels/doc/glm_fix_issu530.patch
+- The constant cMAX_NR_OF_BLOCKS is currently limited to 65535, while current CUDA devices support over 2 billion blocks
+  - relevant during computeLinearLoad calls and collision checking
+
+V1.3.1 (2019-01-17):
+====================
+Fix findMatchingVoxels usage of binary_search. Could cause segfaults before.
+
