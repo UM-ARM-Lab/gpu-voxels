@@ -130,7 +130,7 @@ size_t ProbVoxelMap::collideWith(const ProbVoxelMap *map, float coll_threshold, 
   return collisionCheckWithCounterRelativeTransform((TemplateVoxelMap*)map, collider, offset); //does the locking
 }
 
-bool ProbVoxelMap::overlapsWith(const voxelmap::ProbVoxelMap* other, float coll_threshold)
+bool ProbVoxelMap::overlapsWith(const voxelmap::ProbVoxelMap* other, float coll_threshold) const 
 {
   DefaultCollider collider(coll_threshold);
   bool *dev_overlap_result;
@@ -148,7 +148,7 @@ bool ProbVoxelMap::overlapsWith(const voxelmap::ProbVoxelMap* other, float coll_
 
 
 
-size_t ProbVoxelMap::countOccupied()
+size_t ProbVoxelMap::countOccupied() const
 {
     HANDLE_CUDA_ERROR(cudaDeviceSynchronize());
     kernelCountOccupied<<<m_blocks, m_threads>>>(m_dev_data, m_voxelmap_size,
@@ -168,7 +168,7 @@ size_t ProbVoxelMap::countOccupied()
     return num_occupied;
 }
 
-std::vector<Vector3f> ProbVoxelMap::getOccupiedCenters()
+std::vector<Vector3f> ProbVoxelMap::getOccupiedCenters() const
 {
     thrust::device_vector<uint32_t> dev_occ_indices(m_voxelmap_size);
     thrust::counting_iterator<uint32_t> first(0);
