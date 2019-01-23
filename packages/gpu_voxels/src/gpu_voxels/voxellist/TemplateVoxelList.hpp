@@ -38,6 +38,7 @@
 #include <thrust/remove.h>
 #include <thrust/binary_search.h>
 #include <thrust/system_error.h>
+#include <gpu_voxels/helpers/serialize.hpp>
 
 namespace gpu_voxels {
 namespace voxellist {
@@ -633,20 +634,11 @@ Vector3f TemplateVoxelList<Voxel, VoxelIDType>::getCenterOfMass(Vector3ui lower_
 }
 
 template<class Voxel, class VoxelIDType>
-bool TemplateVoxelList<Voxel, VoxelIDType>::writeToDisk(const std::string path)
+uint64_t TemplateVoxelList<Voxel, VoxelIDType>::serializeSelf(std::vector<uint8_t>& buffer)
 {
-
-  LOGGING_INFO_C(VoxellistLog, TemplateVoxelList, "Dumping VoxelList to disk: " <<
-                 getDimensions().x << " Voxels ==> " << (getMemoryUsage() * cBYTE2MBYTE) << " MB. ..." << endl);
-
+  const uint64_t start_buffer_size = buffer.size();
   lock_guard guard(this->m_mutex);
-  std::ofstream out(path.c_str());
-
-  if(!out.is_open())
-  {
-    LOGGING_ERROR_C(VoxellistLog, TemplateVoxelList, "Write to file " << path << " failed!" << endl);
-    return false;
-  }
+  
   thrust::host_vector<VoxelIDType> host_id_list = m_dev_id_list;
   thrust::host_vector<Vector3ui> host_coord_list = m_dev_coord_list;
   thrust::host_vector<Voxel> host_list = m_dev_list;
@@ -654,21 +646,21 @@ bool TemplateVoxelList<Voxel, VoxelIDType>::writeToDisk(const std::string path)
   uint32_t num_voxels = host_list.size();
   int32_t map_type = m_map_type;
 
-  out.write((char*) &map_type, sizeof(int32_t));
-  out.write((char*) &m_ref_map_dim, sizeof(Vector3ui));
-  out.write((char*) &m_voxel_side_length, sizeof(float));
-  out.write((char*) &num_voxels, sizeof(uint32_t));
-  out.write((char*) &host_id_list[0], num_voxels * sizeof(VoxelIDType));
-  out.write((char*) &host_coord_list[0], num_voxels * sizeof(Vector3ui));
-  out.write((char*) &host_list[0], num_voxels * sizeof(Voxel));
+  serialize(map_type, buffer);
+  serialize(m_ref_map_dim, buffer);
+  serialize(m_voxel_side_length, buffer);
+  serialize(num_voxels, buffer);
+  serialize(host_id_list[0], num_voxels * sizeof(VoxelIDType), buffer);
+  serialize(host_coord_list[0], num_voxels * sizeof(Vector3ui), buffer);
+  serialize(host_list[0], num_voxels * sizeof(Voxel), buffer);
 
-  out.close();
-  LOGGING_INFO_C(VoxellistLog, TemplateVoxelList, "Write to disk done: Extracted "<< num_voxels << " Voxels." << endl);
-  return true;
+  return buffer.size() - start_buffer_size;
 }
 
+
 template<class Voxel, class VoxelIDType>
-bool TemplateVoxelList<Voxel, VoxelIDType>::readFromDisk(const std::string path)
+bool TemplateVoxelList<Voxel, VoxelIDType>::deserializeSelf(std::vector<uint8_t>& buffer,
+                                                            uint64_t &buffer_index)
 {
   lock_guard guard(this->m_mutex);
   thrust::host_vector<VoxelIDType> host_id_list;
@@ -680,47 +672,91 @@ bool TemplateVoxelList<Voxel, VoxelIDType>::readFromDisk(const std::string path)
   Vector3ui ref_map_dim;
   int32_t map_type;
 
-  std::ifstream in(path.c_str());
-  if(!in.is_open())
-  {
-    LOGGING_ERROR_C(VoxellistLog, TemplateVoxelList, "Read from file " << path << " failed!"<< endl);
-    return false;
-  }
+  deserialize(map_type, buffer, buffer_index);
 
-  in.read((char*) &map_type, sizeof(int32_t));
   if(map_type != m_map_type)
   {
     LOGGING_ERROR_C(VoxellistLog, TemplateVoxelList, "Read from file failed: The map type (" << map_type << ") does not match current object (" << m_map_type << ")!" << endl);
     return false;
   }
-  in.read((char*)&ref_map_dim, sizeof(Vector3ui));
+
+  deserialize(ref_map_dim, buffer, buffer_index);
   if(ref_map_dim != m_ref_map_dim)
   {
     LOGGING_ERROR_C(VoxellistLog, TemplateVoxelList, "Read from file failed: Read reference map dimension (" << ref_map_dim << ") does not match current object (" << m_ref_map_dim << ")!" << endl);
     return false;
   }
-  in.read((char*)&voxel_side_length, sizeof(float));
+
+  deserialize(voxel_side_length, buffer, buffer_index);
   if(voxel_side_length != m_voxel_side_length)
   {
     LOGGING_ERROR_C(VoxellistLog, TemplateVoxelList, "Read from file failed: Read Voxel side length (" << voxel_side_length << ") does not match current object (" << m_voxel_side_length << ")!" << endl);
     return false;
   }
-  in.read((char*)&num_voxels, sizeof(uint32_t));
+
+  deserialize(num_voxels, buffer, buffer_index);
 
   host_id_list.resize(num_voxels);
   host_coord_list.resize(num_voxels);
   host_list.resize(num_voxels);
-  in.read((char*) &host_id_list[0], num_voxels * sizeof(VoxelIDType));
-  in.read((char*) &host_coord_list[0], num_voxels * sizeof(Vector3ui));
-  in.read((char*) &host_list[0], num_voxels * sizeof(Voxel));
 
-  in.close();
-  LOGGING_INFO_C(VoxellistLog, TemplateVoxelList, "Read "<< num_voxels << " Voxels from file." << endl;);
-
+  deserialize(host_id_list[0],    num_voxels * sizeof(VoxelIDType), buffer, buffer_index);
+  deserialize(host_coord_list[0], num_voxels * sizeof(Vector3ui),   buffer, buffer_index);
+  deserialize(host_list[0],       num_voxels * sizeof(Voxel),       buffer, buffer_index);
 
   m_dev_id_list = host_id_list;
   m_dev_coord_list = host_coord_list;
   m_dev_list = host_list;
+  return true;
+
+}
+
+
+template<class Voxel, class VoxelIDType>
+bool TemplateVoxelList<Voxel, VoxelIDType>::writeToDisk(const std::string path)
+{
+
+  LOGGING_INFO_C(VoxellistLog, TemplateVoxelList, "Dumping VoxelList to disk: " <<
+                 getDimensions().x << " Voxels ==> " << (getMemoryUsage() * cBYTE2MBYTE) << " MB. ..." << endl);
+
+  std::vector<uint8_t> buffer;
+  serializeSelf(buffer);
+  std::ofstream out(path.c_str());
+
+  if(!out.is_open())
+  {
+    LOGGING_ERROR_C(VoxellistLog, TemplateVoxelList, "Write to file " << path << " failed!" << endl);
+    return false;
+  }
+  out.write((char*) &buffer[0], buffer.size());
+
+  out.close();
+  LOGGING_INFO_C(VoxellistLog, TemplateVoxelList, "Write to disk done: Extracted "<< m_dev_list.size() << " Voxels." << endl);
+  return true;
+}
+
+template<class Voxel, class VoxelIDType>
+bool TemplateVoxelList<Voxel, VoxelIDType>::readFromDisk(const std::string path)
+{
+
+  std::ifstream in(path.c_str());
+  if(!in.is_open())
+  {
+    LOGGING_ERROR_C(VoxellistLog, TemplateVoxelList, "Opening file " << path << " failed!"<< endl);
+    return false;
+  }
+
+  in.seekg(0, in.end);
+  std::streamsize size = in.tellg();
+  in.seekg(0, in.beg);
+  std::vector<uint8_t> buffer(size);
+  if(!in.read((char*)buffer.data(), size))
+  {
+    LOGGING_ERROR_C(VoxellistLog, TemplateVoxelList, "Read from file " << path << " failed!"<< endl);
+    return false;
+  }
+  uint64_t start_index = 0;
+  deserializeSelf(buffer, start_index);
   return true;
 }
 
