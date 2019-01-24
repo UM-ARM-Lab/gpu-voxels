@@ -176,7 +176,7 @@ public:
   virtual Vector3f getCenterOfMass() const;
   virtual Vector3f getCenterOfMass(Vector3ui lower_bound, Vector3ui upper_bound) const;
 
-  uint64_t serializeSelf(std::vector<uint8_t>& buffer);
+  uint64_t serializeSelf(std::vector<uint8_t>& buffer) const;
     
   bool deserializeSelf(std::vector<uint8_t>& buffer, uint64_t &buffer_index);
 

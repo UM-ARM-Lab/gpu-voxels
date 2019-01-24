@@ -634,7 +634,7 @@ Vector3f TemplateVoxelList<Voxel, VoxelIDType>::getCenterOfMass(Vector3ui lower_
 }
 
 template<class Voxel, class VoxelIDType>
-uint64_t TemplateVoxelList<Voxel, VoxelIDType>::serializeSelf(std::vector<uint8_t>& buffer)
+uint64_t TemplateVoxelList<Voxel, VoxelIDType>::serializeSelf(std::vector<uint8_t>& buffer) const
 {
   const uint64_t start_buffer_size = buffer.size();
   lock_guard guard(this->m_mutex);
