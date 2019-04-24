@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 
   // add only voxels with high occupancy
   float occupancy_threshold = 0.55f;
-  dist_map->mergeOccupied(prob_map, Vector3ui(0), occupancy_threshold); // merge only those voxels with occupancy exceeding this threshold
+  dist_map->mergeOccupied(prob_map.get(), Vector3ui(0), occupancy_threshold); // merge only those voxels with occupancy exceeding this threshold
 
   dist_map->parallelBanding3D(m1, m2, m3, PBA_DEFAULT_M1_BLOCK_SIZE, PBA_DEFAULT_M2_BLOCK_SIZE, PBA_DEFAULT_M3_BLOCK_SIZE, 1);
 

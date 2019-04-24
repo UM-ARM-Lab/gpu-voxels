@@ -63,9 +63,10 @@ public:
 
 public:
 
-  virtual bool mergeOccupied(const boost::shared_ptr<ProbVoxelMap> other, const Vector3ui &voxel_offset = Vector3ui(), float occupancy_threshold = 0.5);
+  virtual bool mergeOccupied(const ProbVoxelMap *other, const Vector3ui &voxel_offset = Vector3ui(), float occupancy_threshold = 0.5);
 
-  DistanceVoxel::pba_dist_t getClosestObstacleDistance(const boost::shared_ptr<ProbVoxelMap> other);
+  DistanceVoxel::pba_dist_t getClosestObstacleDistance(const ProbVoxelMap *other);
+  std::pair<Vector3i, DistanceVoxel> getClosestObstacle(const ProbVoxelMap *other);
 
   void jumpFlood3D(int block_size = cMAX_THREADS_PER_BLOCK, int debug = 0, bool logging_reinit = false);
   void exactDistances3D(std::vector<Vector3f>& points);

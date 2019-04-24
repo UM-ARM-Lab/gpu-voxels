@@ -107,7 +107,7 @@ void DistanceVoxelMap::clearBitVoxelMeaning(BitVoxelMeaning voxel_meaning)
   // TODO: printf or make functional
 }
 
-bool DistanceVoxelMap::mergeOccupied(const boost::shared_ptr<ProbVoxelMap> other, const Vector3ui &voxel_offset, float occupancy_threshold) {
+bool DistanceVoxelMap::mergeOccupied(const ProbVoxelMap *other, const Vector3ui &voxel_offset, float occupancy_threshold) {
   boost::lock(this->m_mutex, other->m_mutex);
   lock_guard guard(this->m_mutex, boost::adopt_lock);
   lock_guard guard2(other->m_mutex, boost::adopt_lock);
@@ -120,10 +120,10 @@ bool DistanceVoxelMap::mergeOccupied(const boost::shared_ptr<ProbVoxelMap> other
   thrust::transform_if(
         thrust::device_system_tag(),
 
-        thrust::make_zip_iterator( thrust::make_tuple(other->getDeviceDataPtr(),
+        thrust::make_zip_iterator( thrust::make_tuple(other->getConstDeviceDataPtr(),
                                                       thrust::counting_iterator<uint>(0) )),
 
-        thrust::make_zip_iterator( thrust::make_tuple(other->getDeviceDataPtr() + this->getVoxelMapSize(),
+        thrust::make_zip_iterator( thrust::make_tuple(other->getConstDeviceDataPtr() + this->getVoxelMapSize(),
                                                       thrust::counting_iterator<uint>(this->getVoxelMapSize()) )),
 
         this->getDeviceDataPtr(),
@@ -136,21 +136,30 @@ bool DistanceVoxelMap::mergeOccupied(const boost::shared_ptr<ProbVoxelMap> other
   return true;
 }
 
-DistanceVoxel::pba_dist_t DistanceVoxelMap::getClosestObstacleDistance(const boost::shared_ptr<ProbVoxelMap> other)
+DistanceVoxel::pba_dist_t DistanceVoxelMap::getClosestObstacleDistance(const ProbVoxelMap *other)
 {
 
+  std::pair<Vector3i, DistanceVoxel> result = getClosestObstacle(other);
+  Vector3i pos = result.first;
+  DistanceVoxel closest_dist_vox = result.second;
+  // return sqrt((thrust::get<1>(*closest).squaredObstacleDistance(pos));
+  return sqrt(closest_dist_vox.squaredObstacleDistance(pos));
+}
+
+std::pair<Vector3i, DistanceVoxel> DistanceVoxelMap::getClosestObstacle(const ProbVoxelMap *other)
+{
   thrust::counting_iterator<uint32_t> count(0);
   uint32_t s = this->getVoxelMapSize();
 
 
-  thrust::device_ptr<ProbabilisticVoxel> d_other_ptr =
-    thrust::device_pointer_cast(other->getDeviceDataPtr());
-  thrust::device_ptr<DistanceVoxel> d_this_ptr =
-    thrust::device_pointer_cast(this->getDeviceDataPtr());
+  thrust::device_ptr<const ProbabilisticVoxel> d_other_ptr =
+    thrust::device_pointer_cast(other->getConstDeviceDataPtr());
+  thrust::device_ptr<const DistanceVoxel> d_this_ptr =
+    thrust::device_pointer_cast(this->getConstDeviceDataPtr());
 
 
-  typedef thrust::tuple<thrust::device_ptr<ProbabilisticVoxel>,
-                        thrust::device_ptr<DistanceVoxel>,
+  typedef thrust::tuple<thrust::device_ptr<const ProbabilisticVoxel>,
+                        thrust::device_ptr<const DistanceVoxel>,
                         thrust::counting_iterator<uint32_t> >  elementTuple;
   
   thrust::zip_iterator<elementTuple> closest =
@@ -166,9 +175,8 @@ DistanceVoxel::pba_dist_t DistanceVoxelMap::getClosestObstacleDistance(const boo
 
   Vector3i pos = mapToVoxelsSigned(thrust::get<2>(*closest), this->getDimensions());
   DistanceVoxel closest_dist_vox = thrust::get<1>(*closest);
-  
-  // return sqrt((thrust::get<1>(*closest).squaredObstacleDistance(pos));
-  return sqrt(closest_dist_vox.squaredObstacleDistance(pos));
+
+  return std::make_pair(pos, closest_dist_vox);
 }    
 
     
