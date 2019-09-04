@@ -75,7 +75,7 @@ public:
   size_t countOccupied() const;
   bool overlapsWith(const voxelmap::ProbVoxelMap* other, float coll_threshold = 1.0) const;
 
-  void copyIthOccupied(const voxelmap::ProbVoxelMap* other, unsigned long copy_index);
+  void copyIthOccupied(const voxelmap::ProbVoxelMap* other, unsigned long copy_index) const;
     
 };
   

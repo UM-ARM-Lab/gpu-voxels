@@ -210,7 +210,7 @@ thrust::device_vector<Vector3ui> ProbVoxelMap::getDeviceOccupiedCoords() const
     return dev_coords;
 }
 
-void ProbVoxelMap::copyIthOccupied(const voxelmap::ProbVoxelMap* other, unsigned long copy_index)
+void ProbVoxelMap::copyIthOccupied(const voxelmap::ProbVoxelMap* other, unsigned long copy_index) const
 {
     unsigned long long int* d_counter;
     unsigned long long int h_counter = 0;
