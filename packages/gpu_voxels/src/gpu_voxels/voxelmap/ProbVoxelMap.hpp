@@ -191,6 +191,13 @@ std::vector<Vector3f> ProbVoxelMap::getOccupiedCenters() const
     return stdcenters;
 }
 
+std::vector<Vector3ui> ProbVoxelMap::getOccupiedCoords() const
+{
+    thrust::host_vector<Vector3ui> h_coords(getDeviceOccupiedCoords());
+    std::vector<Vector3ui> coords(h_coords.begin(), h_coords.end());
+    return coords;
+}
+
 thrust::device_vector<Vector3ui> ProbVoxelMap::getDeviceOccupiedCoords() const
 {
     thrust::device_vector<uint32_t> dev_occ_indices(m_voxelmap_size);

@@ -70,6 +70,7 @@ public:
   size_t collideWith(const voxelmap::BitVectorVoxelMap* map, float coll_threshold = 1.0, const Vector3i &offset = Vector3i());
   size_t collideWith(const voxelmap::ProbVoxelMap* map, float coll_threshold = 1.0, const Vector3i &offset = Vector3i());
 
+  std::vector<Vector3ui> getOccupiedCoords() const;
   std::vector<Vector3f> getOccupiedCenters() const;
   thrust::device_vector<Vector3ui> getDeviceOccupiedCoords() const;
   size_t countOccupied() const;
