@@ -42,6 +42,7 @@
 #include <thrust/tuple.h>
 #include <thrust/extrema.h>
 #include <thrust/transform.h>
+#include <thrust/device_malloc_allocator.h>
 
 
 #include <gpu_voxels/logging/logging_gpu_voxels.h>
