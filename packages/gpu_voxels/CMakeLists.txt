@@ -1,5 +1,7 @@
 # this is for emacs file handling -*- mode: cmake; indent-tabs-mode: nil -*-
 
+
+
 SET(CMAKE_CXX_STANDARD 11) # comment out to deactivate C++11 when using ROS indigo to avoid incompatibilities
 
 # --- To be used by other modules ---
@@ -39,7 +41,7 @@ FIND_PACKAGE(Octomap)
 # Dependencies for PCL interfaces
 # FIND_PACKAGE(PCL)
 
-FIND_PACKAGE(pcl_ros)
+# FIND_PACKAGE(pcl_ros)
 
 # Dependencies for Kinect support
 FIND_PACKAGE(OpenNi)
@@ -193,7 +195,10 @@ REMOVE_VTK_DEFINITIONS()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_FORCE_INLINES")
 
 ADD_SUBDIRECTORY(src/gpu_voxels)
-ADD_SUBDIRECTORY(src/gpu_visualization)
+
+# Removed visualizer as I do not use it and it was causing compilation issues with new boost version
+# ADD_SUBDIRECTORY(src/gpu_visualization)
+
 
 ICMAKER_CONFIGURE_PACKAGE()
 

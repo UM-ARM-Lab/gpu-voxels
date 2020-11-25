@@ -1,5 +1,6 @@
 mkdir build
 cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=/home/bradsaund/gvl
+(Additional options might be necessary depending on gcc version)  -DCMAKE_C_COMPILER=$(which gcc-8) -DCMAKE_CXX_COMPILER=$(which g++-8)
 make
 make install
