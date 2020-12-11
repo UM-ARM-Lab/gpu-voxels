@@ -29,6 +29,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cstdio>
+#include <cmath>
 #include "icl_core_logging/ThreadStream.h"
 
 namespace gpu_voxels {
